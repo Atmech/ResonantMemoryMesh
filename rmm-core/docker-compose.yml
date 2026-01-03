@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: ankane/pgvector:v0.5.0
+    container_name: rmm-postgres
+    environment:
+      POSTGRES_USER: rmm
+      POSTGRES_PASSWORD: rmm_dev_password
+      POSTGRES_DB: rmm
+    ports:
+      - "5432:5432"
+    volumes:
+      - rmm_pgdata:/var/lib/postgresql/data
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rmm -d rmm"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    command: >
+      postgres
+      -c shared_buffers=512MB
+      -c work_mem=128MB
+      -c maintenance_work_mem=256MB
+      -c effective_cache_size=1GB
+      -c max_connections=200
+      -c logging_collector=on
+      -c log_directory='log'
+      -c log_filename='postgresql-%Y-%m-%d_%H%M%S.log'
+      -c log_statement='none'
+      -c checkpoint_timeout=15min
+      -c checkpoint_completion_target=0.9
+      -c min_wal_size=1GB
+      -c max_wal_size=4GB
+
+volumes:
+  rmm_pgdata:
+
+# Usage:
+#   docker-compose up -d
+#   docker-compose logs -f postgres
+#   
+# Connection string:
+#   postgresql://rmm:rmm_dev_password@localhost:5432/rmm
+#
+# Teardown:
+#   docker-compose down -v

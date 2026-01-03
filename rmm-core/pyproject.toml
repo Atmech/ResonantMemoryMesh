@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rmm-core"
+version = "0.1.0"
+description = "Resonant Memory Mesh - Associative memory kernel for AI systems"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "RMM Team"}
+]
+dependencies = [
+    "numpy>=1.24.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+]
+postgres = [
+    "psycopg[binary]>=3.1.0",
+    "psycopg_pool>=3.1.0",
+    "pgvector>=0.2.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["rmm*"]

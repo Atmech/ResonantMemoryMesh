@@ -1,0 +1,49 @@
+[package]
+name = "rmm-rust"
+version = "0.1.0"
+edition = "2021"
+description = "High-performance Resonant Memory Mesh kernel with Python bindings"
+license = "MIT"
+
+[lib]
+name = "rmm_rust"
+crate-type = ["cdylib"]
+
+[dependencies]
+# PyO3 for Python bindings
+pyo3 = { version = "0.20", features = ["extension-module"] }
+
+# Parallelism
+rayon = "1.8"
+
+# Efficient collections
+rustc-hash = "1.1"
+dashmap = "5.5"
+
+# UUID handling
+uuid = { version = "1.6", features = ["v4", "serde"] }
+rand = "0.8"
+
+# Numerics (for vector ops)
+ndarray = "0.15"
+numpy = "0.20"
+
+# Serialization (for Arrow/zero-copy future)
+serde = { version = "1.0", features = ["derive"] }
+
+# Logging
+log = "0.4"
+pyo3-log = "0.9"
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3
+
+[profile.dev]
+opt-level = 1
+
+# Build configuration for maturin
+[tool.maturin]
+python-source = "python"
+features = ["pyo3/extension-module"]

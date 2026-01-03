@@ -1,0 +1,16 @@
+# Rust
+rmm-rust/target/
+
+# Python
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+*.pyc
+
+# Mac
+.DS_Store
+
+# Misc / Likely accidental installs in root
+pypdf/
+pypdf-*.dist-info/
