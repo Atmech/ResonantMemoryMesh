@@ -1,0 +1,213 @@
+🔗 Found pyo3 bindings
+🐍 Found CPython 3.13 at /Users/affantanke/Developer/ResonantMemoryMesh/.venv/bin/python
+📡 Using build options features from pyproject.toml
+Ignoring pytest: markers 'extra == "dev"' don't match your environment
+Ignoring maturin: markers 'extra == "dev"' don't match your environment
+warning: unused manifest key: tool
+   Compiling rmm-rust v0.1.0 (/Users/affantanke/Developer/ResonantMemoryMesh/rmm-rust)
+warning: unused import: `dashmap::DashMap`
+  --> src/kernel.rs:14:5
+   |
+14 | use dashmap::DashMap;
+   |     ^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `std::sync::Arc`
+  --> src/kernel.rs:18:5
+   |
+18 | use std::sync::Arc;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `InternalEdge`
+  --> src/kernel.rs:23:45
+   |
+23 | use crate::models::{RustNode, InternalNode, InternalEdge};
+   |                                             ^^^^^^^^^^^^
+
+warning: unused import: `rand::seq::IteratorRandom`
+  --> src/cache.rs:16:5
+   |
+16 | use rand::seq::IteratorRandom; 
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused variable: `py`
+  --> src/models.rs:67:9
+   |
+67 |         py: Python<'_>,
+   |         ^^ help: if this is intentional, prefix it with an underscore: `_py`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `py`
+   --> src/models.rs:160:9
+    |
+160 |         py: Python<'_>,
+    |         ^^ help: if this is intentional, prefix it with an underscore: `_py`
+
+warning: unused variable: `py`
+   --> src/kernel.rs:120:9
+    |
+120 |         py: Python<'_>,
+    |         ^^ help: if this is intentional, prefix it with an underscore: `_py`
+
+warning: unused variable: `py`
+  --> src/cache.rs:74:9
+   |
+74 |         py: Python<'_>,
+   |         ^^ help: if this is intentional, prefix it with an underscore: `_py`
+
+warning: variable does not need to be mutable
+   --> src/cache.rs:140:13
+    |
+140 |         let mut rng = rand::thread_rng();
+    |             ----^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `rng`
+   --> src/cache.rs:140:13
+    |
+140 |         let mut rng = rand::thread_rng();
+    |             ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_rng`
+
+warning: unused variable: `py`
+   --> src/cache.rs:236:36
+    |
+236 |     pub fn delete_nodes_raw(&self, py: Python<'_>, ids: Vec<&PyBytes>) -> usize {
+    |                                    ^^ help: if this is intentional, prefix it with an underscore: `_py`
+
+warning: unused variable: `py`
+   --> src/cache.rs:276:32
+    |
+276 |     pub fn get_node_raw(&self, py: Python<'_>, uuid_bytes: &PyBytes) -> Option<RustNode> {
+    |                                ^^ help: if this is intentional, prefix it with an underscore: `_py`
+
+warning: function `batch_accumulate` is never used
+  --> src/physics.rs:68:8
+   |
+68 | pub fn batch_accumulate(
+   |        ^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `cosine_similarity` is never used
+  --> src/physics.rs:79:8
+   |
+79 | pub fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
+   |        ^^^^^^^^^^^^^^^^^
+
+warning: function `batch_cosine_similarity` is never used
+  --> src/physics.rs:97:8
+   |
+97 | pub fn batch_cosine_similarity(query: &[f32], candidates: &[Vec<f32>]) -> Vec<f32> {
+   |        ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: non-local `impl` definition, `impl` blocks should be written at the same level as their item
+  --> src/models.rs:36:1
+   |
+36 | #[pymethods]
+   | -^^^^^^^^^^^
+   | |
+   | `PyClassImplCollector` is not local
+   | `PyClassNewTextSignature` is not local
+   | move the `impl` block outside of this function `trampoline` and up 4 bodies
+37 | impl RustNode {
+   |      --------
+   |      |
+   |      `RustNode` is not local
+   |      `RustNode` is not local
+   |
+   = note: the attribute macro `pymethods` defines the non-local `impl`, and may need to be changed
+   = note: the attribute macro `pymethods` may come from an old version of the `pyo3_macros` crate, try updating your dependency with `cargo update -p pyo3_macros`
+   = note: an `impl` is never scoped, even when it is nested inside an item, as it may impact type checking outside of that item, which can be the case if neither the trait or the self type are at the same nesting level as the `impl`
+   = note: `#[warn(non_local_definitions)]` on by default
+   = note: this warning originates in the attribute macro `pymethods` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: non-local `impl` definition, `impl` blocks should be written at the same level as their item
+   --> src/models.rs:145:1
+    |
+145 | #[pymethods]
+    | -^^^^^^^^^^^
+    | |
+    | `PyClassImplCollector` is not local
+    | `PyClassNewTextSignature` is not local
+    | move the `impl` block outside of this function `trampoline` and up 4 bodies
+146 | impl RustEdge {
+    |      --------
+    |      |
+    |      `RustEdge` is not local
+    |      `RustEdge` is not local
+    |
+    = note: the attribute macro `pymethods` defines the non-local `impl`, and may need to be changed
+    = note: the attribute macro `pymethods` may come from an old version of the `pyo3_macros` crate, try updating your dependency with `cargo update -p pyo3_macros`
+    = note: an `impl` is never scoped, even when it is nested inside an item, as it may impact type checking outside of that item, which can be the case if neither the trait or the self type are at the same nesting level as the `impl`
+    = note: this warning originates in the attribute macro `pymethods` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: non-local `impl` definition, `impl` blocks should be written at the same level as their item
+  --> src/kernel.rs:59:1
+   |
+59 | #[pymethods]
+   | -^^^^^^^^^^^
+   | |
+   | `PyClassImplCollector` is not local
+   | `PyClassNewTextSignature` is not local
+   | move the `impl` block outside of this function `trampoline` and up 4 bodies
+60 | impl KernelConfig {
+   |      ------------
+   |      |
+   |      `KernelConfig` is not local
+   |      `KernelConfig` is not local
+   |
+   = note: the attribute macro `pymethods` defines the non-local `impl`, and may need to be changed
+   = note: the attribute macro `pymethods` may come from an old version of the `pyo3_macros` crate, try updating your dependency with `cargo update -p pyo3_macros`
+   = note: an `impl` is never scoped, even when it is nested inside an item, as it may impact type checking outside of that item, which can be the case if neither the trait or the self type are at the same nesting level as the `impl`
+   = note: this warning originates in the attribute macro `pymethods` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: non-local `impl` definition, `impl` blocks should be written at the same level as their item
+  --> src/kernel.rs:89:1
+   |
+89 | #[pymethods]
+   | -^^^^^^^^^^^
+   | |
+   | `PyClassImplCollector` is not local
+   | `PyClassNewTextSignature` is not local
+   | move the `impl` block outside of this function `trampoline` and up 4 bodies
+90 | impl RustKernel {
+   |      ----------
+   |      |
+   |      `RustKernel` is not local
+   |      `RustKernel` is not local
+   |
+   = note: the attribute macro `pymethods` defines the non-local `impl`, and may need to be changed
+   = note: the attribute macro `pymethods` may come from an old version of the `pyo3_macros` crate, try updating your dependency with `cargo update -p pyo3_macros`
+   = note: an `impl` is never scoped, even when it is nested inside an item, as it may impact type checking outside of that item, which can be the case if neither the trait or the self type are at the same nesting level as the `impl`
+   = note: this warning originates in the attribute macro `pymethods` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: non-local `impl` definition, `impl` blocks should be written at the same level as their item
+  --> src/cache.rs:43:1
+   |
+43 | #[pymethods]
+   | -^^^^^^^^^^^
+   | |
+   | `PyClassImplCollector` is not local
+   | `PyClassNewTextSignature` is not local
+   | move the `impl` block outside of this function `trampoline` and up 4 bodies
+44 | impl L1Cache {
+   |      -------
+   |      |
+   |      `L1Cache` is not local
+   |      `L1Cache` is not local
+   |
+   = note: the attribute macro `pymethods` defines the non-local `impl`, and may need to be changed
+   = note: the attribute macro `pymethods` may come from an old version of the `pyo3_macros` crate, try updating your dependency with `cargo update -p pyo3_macros`
+   = note: an `impl` is never scoped, even when it is nested inside an item, as it may impact type checking outside of that item, which can be the case if neither the trait or the self type are at the same nesting level as the `impl`
+   = note: this warning originates in the attribute macro `pymethods` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: `rmm-rust` (lib) generated 20 warnings (run `cargo fix --lib -p rmm-rust` to apply 12 suggestions)
+    Finished `release` profile [optimized] target(s) in 6.71s
+📦 Built wheel for CPython 3.13 to /var/folders/1d/xl2p9_l530jg_6ljgvcc7dp40000gn/T/.tmpxi2jAc/rmm_rust-0.1.0-cp313-cp313-macosx_11_0_arm64.whl
+✏️ Setting installed package as editable
+🛠 Installed rmm-rust-0.1.0

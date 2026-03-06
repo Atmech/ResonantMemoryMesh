@@ -1,6 +1,7 @@
 import pytest
 import uuid
-from src.models import Node, Edge
+from rmm.core.synthesizer import StructuralSynthesizer
+from rmm.models import Node, Edge
 from src.storage import InMemoryStorage
 from src.synthesizer import generate_structural_rationale
 

@@ -47,6 +47,13 @@ pub struct KernelConfig {
     
     #[pyo3(get, set)]
     pub min_weight: f32,     // Minimum edge weight
+    
+    // Hub Dampening
+    #[pyo3(get, set)]
+    pub hub_threshold: u32,
+    
+    #[pyo3(get, set)]
+    pub hub_dampening_alpha: f32,
 }
 
 #[pymethods]
@@ -61,6 +68,8 @@ impl KernelConfig {
             epsilon: 0.01,
             max_neighbors: 50,
             min_weight: 0.05,
+            hub_threshold: 100,
+            hub_dampening_alpha: 0.5,
         }
     }
 }
@@ -220,6 +229,9 @@ impl RustKernel {
                         .map(|e| e.value().clone())
                         .unwrap_or_default();
                     
+                    // Calculate degree before edges is moved
+                    let degree = edges.len() as f32;
+                    
                     // Filter and sort edges
                     let mut valid_edges: Vec<_> = edges
                         .into_iter()
@@ -236,15 +248,24 @@ impl RustKernel {
                     // Take top N
                     valid_edges.truncate(self.config.max_neighbors);
                     
+                    // Degree-aware Hub Dampening
+                    let mut gamma = 1.0;
+                    if degree > self.config.hub_threshold as f32 {
+                        gamma = 1.0 / (1.0 + self.config.hub_dampening_alpha * (degree / self.config.hub_threshold as f32).ln());
+                    }
+                    
                     // Calculate energy transfers
                     valid_edges
                         .into_iter()
                         .filter_map(|edge| {
-                            let e_transferred = accumulate(
+                            let mut e_transferred = accumulate(
                                 source_energy,
                                 edge.weight,
                                 self.config.beta,
                             );
+                            
+                            // Apply hub dampening to the outgoing energy
+                            e_transferred *= gamma;
                             
                             if e_transferred >= self.config.epsilon {
                                 Some((edge.target, e_transferred))

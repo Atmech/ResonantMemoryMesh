@@ -51,6 +51,17 @@ class MeshConfig:
     buffer_flush_ms: int = 100
     buffer_shards: int = 16
     hybrid_alpha: float = 0.7  # Hybrid Ignition: Similarity weight
+    
+    # Super-Node Dampening
+    hub_threshold: int = 100
+    hub_dampening_alpha: float = 0.5
+    
+    # AutoLinker parameters
+    auto_link: bool = True
+    auto_link_threshold: float = 0.6
+    
+    # Adaptive Gain Tuning
+    adaptive_tuning: bool = False
 
 
 @dataclass

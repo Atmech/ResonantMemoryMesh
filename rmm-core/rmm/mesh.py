@@ -22,6 +22,8 @@ from rmm import Node, Edge, MeshConfig, QueryResult
 from rmm.adapters.base import BaseStorage
 from rmm.core.buffer import WriteBackBuffer
 from rmm.core.synthesizer import generate_structural_rationale
+from rmm.core.autolinker import AutoLinker
+from rmm.core.adaptive import AdaptiveTuner
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +45,8 @@ class Mesh:
         rust_config.max_hops = int(self.config.max_hops)
         rust_config.e_max = float(self.config.e_max)
         rust_config.epsilon = float(self.config.epsilon)
+        rust_config.hub_threshold = int(getattr(self.config, 'hub_threshold', 100))
+        rust_config.hub_dampening_alpha = float(getattr(self.config, 'hub_dampening_alpha', 0.5))
         
         self.cache = rmm_rust.L1Cache()
         self.kernel = rmm_rust.RustKernel(rust_config)
@@ -242,9 +246,23 @@ class Mesh:
                     
             logger.warning(f"Fault-In: Processed {count_entries_warmed} entries, Warmed {len(all_neighbor_ids_to_fetch)} neighbor nodes (Global Batch)")
 
+        # 3.5 Adaptive Tuning (optional override)
+        active_kernel = self.kernel
+        if getattr(self.config, 'adaptive_tuning', False):
+            tuned_config = AdaptiveTuner.tune(self.config, self.storage)
+            rust_config = rmm_rust.KernelConfig()
+            rust_config.beta = float(tuned_config.beta)
+            rust_config.lambda_decay = float(tuned_config.lambda_decay)
+            rust_config.max_hops = int(tuned_config.max_hops)
+            rust_config.e_max = float(tuned_config.e_max)
+            rust_config.epsilon = float(tuned_config.epsilon)
+            rust_config.hub_threshold = int(getattr(tuned_config, 'hub_threshold', 100))
+            rust_config.hub_dampening_alpha = float(getattr(tuned_config, 'hub_dampening_alpha', 0.5))
+            active_kernel = rmm_rust.RustKernel(rust_config)
+
         # 4. Kernel propagation (Rust Hot Path)
         entry_bytes = [eid.bytes for eid in entry_ids]
-        rust_nodes = self.kernel.execute_raw(entry_bytes, self.cache, None)
+        rust_nodes = active_kernel.execute_raw(entry_bytes, self.cache, None)
         
         # Convert RustNode back to Python Node objects
         activated_nodes = []
@@ -333,6 +351,15 @@ class Mesh:
         self.node_buffer.mark_dirty(node)
         # 2. IMMEDIATE push to Rust L1
         self._update_rust_l1([node])
+        
+        # 3. AutoLinker: flush first so the node is visible to vector_search
+        if getattr(self.config, 'auto_link', True):
+            self.flush()
+            AutoLinker.link_by_proximity(
+                node_id=node.id, 
+                mesh=self, 
+                threshold=getattr(self.config, 'auto_link_threshold', 0.6)
+            )
         
         return node.id
     

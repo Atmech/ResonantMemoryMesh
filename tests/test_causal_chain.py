@@ -43,7 +43,8 @@ def test_causal_chain_benchmark():
         beta=BETA,
         lambda_decay=LAMBDA_DECAY,
         epsilon=EPSILON_THRESHOLD,
-        max_hops=5
+        max_hops=5,
+        auto_link=False
     )
     
     with Mesh(storage, config) as mesh:

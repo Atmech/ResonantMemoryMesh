@@ -1,8 +1,9 @@
 import pytest
 import uuid
 import numpy as np
-from src.models import Node, Edge
-from src.storage import InMemoryStorage
+from rmm.core.physics import apply_decay, accumulate, activate, apply_inhibition
+from rmm import Mesh, MeshConfig
+from rmm.adapters.memory import InMemoryStorage
 from src.kernel import AtomicPing
 
 @pytest.fixture
