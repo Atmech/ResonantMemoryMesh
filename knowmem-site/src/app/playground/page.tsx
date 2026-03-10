@@ -34,12 +34,8 @@ export default function PlaygroundPage() {
     setAnimating(false);
     // Reset tutorial state
     setTutorialStep(0);
-    // Auto-set the story mode back to ingest for a fresh start, otherwise default to resonate
-    if (selectedCase === "diamond_heist") {
-      setPhase("ingest");
-    } else {
-      setPhase("resonate");
-    }
+    // Auto-set the story mode back to ingest for a fresh start for all cases
+    setPhase("ingest");
   }, [selectedCase]);
 
   // Update config in live graph
@@ -190,147 +186,229 @@ export default function PlaygroundPage() {
 
           </div>
 
-          {/* Guided Story Section for Diamond Heist */}
-          {selectedCase === "diamond_heist" && (
-            <div className="mt-8 bg-[#111111] border border-border/40 rounded-xl p-8 shadow-2xl relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
-              {/* Background glow decoration */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] pointer-events-none"></div>
-              
-              <div className="flex flex-col md:flex-row gap-8 items-center">
+          {/* Interactive Guided Story Section for All Cases */}
+          {(() => {
+            const stories: Record<string, {
+              queryNode: string;
+              queryLabel: string;
+              steps: { icon: any; title: string; text: React.ReactNode; buttonText: string }[];
+            }> = {
+              diamond_heist: {
+                queryNode: "D1",
+                queryLabel: "Museum Theft",
+                steps: [
+                  {
+                    icon: Layers,
+                    title: "Step 1: The Setup",
+                    text: <>Welcome to the <strong>Diamond Heist</strong>. First, KnowMem reads in raw police files, witness reports, and random Chicago trivia. Look at the canvas above—right now, it's just a pile of disconnected data points. No connections have been made yet.</>,
+                    buttonText: "Connect the Evidence"
+                  },
+                  {
+                    icon: LinkIcon,
+                    title: "Step 2: The Connections",
+                    text: <>In the background, the <strong>AutoLinker</strong> analyzes the semantic meaning of every fact and draws invisible threads between related concepts. Notice how the <em>Stolen Diamond</em> is now linked to the <em>Black Van</em>, even though no human explicitly connected them. It also linked a bunch of noise.</>,
+                    buttonText: "Why Vector Search Fails"
+                  },
+                  {
+                    icon: FileSearch,
+                    title: "Step 3: The AI Blindspot",
+                    text: <>A standard Vector Database (like ChatGPT uses) looks for matching words. If we ask <em>"Who stole the museum diamond?"</em>, it finds the Museum, the Diamond, and maybe another robbery. <strong>But it completely misses the real suspect, Victor Vance</strong>, because his specific file doesn't mention the museum.</>,
+                    buttonText: "Try Topological Resonance"
+                  },
+                  {
+                    icon: Zap,
+                    title: "Step 4: Topological Resonance",
+                    text: <>Watch how Resonance solves this. Energy flows structurally from the <em>Query</em>, to the <em>Van</em>, to the <em>Front Company</em>, and finally illuminates <strong>Victor Vance</strong>. The noise is ignored because it doesn't form a coherent resonant path.</>,
+                    buttonText: ""
+                  }
+                ]
+              },
+              causal_chain: {
+                queryNode: "N1",
+                queryLabel: "Context A",
+                steps: [
+                  {
+                    icon: Layers,
+                    title: "Step 1: The Setup",
+                    text: <>Welcome to the <strong>Six Degrees of Project X</strong>. This benchmark models a 5-hop causal chain (A→B→C→D→E). Right now, they're just raw unlinked facts in a database.</>,
+                    buttonText: "Calculate Proximity"
+                  },
+                  {
+                    icon: LinkIcon,
+                    title: "Step 2: The Connections",
+                    text: <>The <strong>AutoLinker</strong> calculates vector similarities and draws edges between locally related facts (e.g., A to B, B to C).</>,
+                    buttonText: "Why Vector Search Fails"
+                  },
+                  {
+                    icon: FileSearch,
+                    title: "Step 3: The AI Blindspot",
+                    text: <>If you query A, a standard vector search might return B, or a semantic distractor. It fundamentally cannot find E, because the cosine similarity between A and E is a mere 0.28—a complete miss.</>,
+                    buttonText: "Try Topological Resonance"
+                  },
+                  {
+                    icon: Zap,
+                    title: "Step 4: Topological Resonance",
+                    text: <>Topological Resonance passes energy through the physical structure of the memory mesh. Watch how querying <em>A</em> effortlessly illuminates <strong>E</strong> at the end of the chain.</>,
+                    buttonText: ""
+                  }
+                ]
+              },
+              medical_diagnosis: {
+                queryNode: "M1",
+                queryLabel: "Symptoms",
+                steps: [
+                  {
+                    icon: Layers,
+                    title: "Step 1: The Setup",
+                    text: <>In <strong>Medical Diagnosis</strong>, we ingest a patient's symptoms, medical literature on conditions and treatments, and their personal health records. No connections exist yet.</>,
+                    buttonText: "Map Medical Concepts"
+                  },
+                  {
+                    icon: LinkIcon,
+                    title: "Step 2: The Connections",
+                    text: <>The <strong>AutoLinker</strong> connects symptoms to conditions, and conditions to typical treatments based on overlapping medical terminology.</>,
+                    buttonText: "Why Vector Search Fails"
+                  },
+                  {
+                    icon: FileSearch,
+                    title: "Step 3: The AI Blindspot",
+                    text: <>A standard RAG system asked to treat 'Headaches' will retrieve 'Migraine' and its treatment 'Triptans'. But it misses the patient's existing <strong>Hypertension</strong> and ignores the severe <strong>Contraindication Alert</strong>.</>,
+                    buttonText: "Try Topological Resonance"
+                  },
+                  {
+                    icon: Zap,
+                    title: "Step 4: Topological Resonance",
+                    text: <>Topological Resonance traverses side-effects automatically. Querying the symptoms illuminates the entire treatment path, lighting up the dangerous Contraindication before a mistake is made.</>,
+                    buttonText: ""
+                  }
+                ]
+              },
+              bug_analysis: {
+                queryNode: "B1",
+                queryLabel: "Null Pointer Error",
+                steps: [
+                  {
+                    icon: Layers,
+                    title: "Step 1: The Setup",
+                    text: <>In <strong>Root Cause Analysis</strong>, we ingest application error logs, Git commits, PR descriptions, Jira tickets, and Design Docs.</>,
+                    buttonText: "Link Code Artefacts"
+                  },
+                  {
+                    icon: LinkIcon,
+                    title: "Step 2: The Connections",
+                    text: <>The <strong>AutoLinker</strong> connects the 'NullPointerException' log to a specific code file, to the commit that changed it, to the PR, and so on.</>,
+                    buttonText: "Why Vector Search Fails"
+                  },
+                  {
+                    icon: FileSearch,
+                    title: "Step 3: The AI Blindspot",
+                    text: <>A developer searching a standard RAG system for 'NullPointerException' will only find the immediate log trace. It has zero chance of returning the original <strong>Cache Invalidation Design Doc</strong> that caused the architectural flaw.</>,
+                    buttonText: "Try Topological Resonance"
+                  },
+                  {
+                    icon: Zap,
+                    title: "Step 4: Topological Resonance",
+                    text: <>Watch Topological Resonance trace the structure backward from the Error Log directly into the Architect's original Design Doc over 5 discrete hops.</>,
+                    buttonText: ""
+                  }
+                ]
+              }
+            };
+
+            const currentStory = stories[selectedCase];
+            if (!currentStory) return null;
+            
+            const stepContent = currentStory.steps[tutorialStep];
+            const StepIcon = stepContent.icon;
+
+            return (
+              <div key={selectedCase} className="mt-8 bg-[#111111] border border-border/40 rounded-xl p-8 shadow-2xl relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
+                {/* Background glow decoration */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] pointer-events-none"></div>
                 
-                {/* Text Content */}
-                <div className="flex-1 space-y-4">
+                <div className="flex flex-col md:flex-row gap-8 items-center">
                   
-                  {tutorialStep === 0 && (
-                    <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                      <h3 className="text-xl font-bold flex items-center gap-2 mb-3 text-primary">
-                        <Layers className="w-6 h-6" />
-                        Step 1: The Setup
+                  {/* Text Content */}
+                  <div className="flex-1 space-y-4">
+                    <div className="animate-in fade-in slide-in-from-right-4 duration-300" key={tutorialStep}>
+                      <h3 className={`text-xl font-bold flex items-center gap-2 mb-3 ${tutorialStep === 2 ? 'text-red-400' : 'text-primary'}`}>
+                        <StepIcon className="w-6 h-6" />
+                        {stepContent.title}
                       </h3>
                       <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
-                        Welcome to the <strong>Diamond Heist</strong>. First, KnowMem reads in raw police files, witness reports, and random Chicago trivia. 
-                        Look at the canvas above—right now, it's just a pile of disconnected data points. No connections have been made yet.
+                        {stepContent.text}
                       </p>
                     </div>
-                  )}
 
-                  {tutorialStep === 1 && (
-                    <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                      <h3 className="text-xl font-bold flex items-center gap-2 mb-3 text-primary">
-                        <LinkIcon className="w-6 h-6" />
-                        Step 2: The Connections
-                      </h3>
-                      <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
-                        In the background, the <strong>AutoLinker</strong> analyzes the semantic meaning of every fact and draws invisible threads between related concepts. 
-                        Notice how the <em>Stolen Diamond</em> is now linked to the <em>Black Van</em>, even though no human explicitly connected them. It also linked a bunch of noise (like pizza and weather).
-                      </p>
+                    {/* Progress Dots */}
+                    <div className="flex gap-2 pt-4">
+                      {[0, 1, 2, 3].map((step) => (
+                        <div 
+                          key={step} 
+                          className={`h-1.5 rounded-full transition-all duration-300 ${tutorialStep === step ? 'w-8 bg-primary' : 'w-2 bg-border'}`}
+                        />
+                      ))}
                     </div>
-                  )}
-
-                  {tutorialStep === 2 && (
-                    <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                      <h3 className="text-xl font-bold flex items-center gap-2 mb-3 text-red-400">
-                        <FileSearch className="w-6 h-6" />
-                        Step 3: The AI Blindspot
-                      </h3>
-                      <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
-                        A standard Vector Database (like ChatGPT uses) looks for matching words. If we ask <em>"Who stole the museum diamond?"</em>, it finds the Museum, the Diamond, and maybe another robbery. 
-                        <strong>But it completely misses the real suspect, Victor Vance</strong>, because his specific file doesn't mention the museum or the diamond.
-                      </p>
-                    </div>
-                  )}
-
-                  {tutorialStep === 3 && (
-                    <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                      <h3 className="text-xl font-bold flex items-center gap-2 mb-3 text-primary">
-                        <Zap className="w-6 h-6" />
-                        Step 4: Topological Resonance
-                      </h3>
-                      <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
-                        Watch how Resonance solves this. Energy flows structurally from the <em>Query</em>, to the <em>Van</em>, to the <em>Front Company</em>, and finally illuminates <strong>Victor Vance</strong>. 
-                        The noise is ignored because it doesn't form a coherent resonant path.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Progress Dots */}
-                  <div className="flex gap-2 pt-4">
-                    {[0, 1, 2, 3].map((step) => (
-                      <div 
-                        key={step} 
-                        className={`h-1.5 rounded-full transition-all duration-300 ${tutorialStep === step ? 'w-8 bg-primary' : 'w-2 bg-border'}`}
-                      />
-                    ))}
                   </div>
 
-                </div>
-
-                {/* Actions */}
-                <div className="w-full md:w-auto shrink-0 flex flex-col gap-3">
-                  {tutorialStep === 0 && (
-                    <button 
-                      onClick={() => { setTutorialStep(1); setPhase("link"); }}
-                      className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white font-semibold py-3 px-6 rounded-lg transition-all active:scale-[0.98]"
-                    >
-                      Connect the Evidence <ArrowRight className="w-4 h-4" />
-                    </button>
-                  )}
-                  {tutorialStep === 1 && (
-                    <button 
-                      onClick={() => { setTutorialStep(2); }}
-                      className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white font-semibold py-3 px-6 rounded-lg transition-all active:scale-[0.98]"
-                    >
-                      Why Vector Search Fails <ArrowRight className="w-4 h-4" />
-                    </button>
-                  )}
-                  {tutorialStep === 2 && (
-                    <button 
-                      onClick={() => { 
-                        setTutorialStep(3); 
-                        setCompareRag(true); // Auto-turn on comparison to show Victor as a miss
-                      }}
-                      className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white font-semibold py-3 px-6 rounded-lg transition-all active:scale-[0.98]"
-                    >
-                      Try Topological Resonance <ArrowRight className="w-4 h-4" />
-                    </button>
-                  )}
-                  {tutorialStep === 3 && (
-                    <div className="flex flex-col gap-2">
-                       <button 
-                        onClick={() => handleNodeClick("D1")}
-                        disabled={animating}
-                        className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 px-6 rounded-lg transition-all active:scale-[0.98] disabled:opacity-50 shadow-[0_0_20px_rgba(0,174,239,0.3)] hover:shadow-[0_0_30px_rgba(0,174,239,0.5)]"
-                      >
-                        {animating ? (
-                          <span className="flex items-center gap-2">
-                            <div className="w-4 h-4 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin"></div>
-                            Resonating...
-                          </span>
-                        ) : (
-                          <>
-                            <Play className="w-4 h-4 fill-current" />
-                            Run Query Again
-                          </>
-                        )}
-                      </button>
+                  {/* Actions */}
+                  <div className="w-full md:w-auto shrink-0 flex flex-col gap-3">
+                    {tutorialStep < 3 && (
                       <button 
-                        onClick={() => {
-                          setTutorialStep(0);
-                          setPhase("ingest");
-                          handleReset();
+                        onClick={() => { 
+                          if (tutorialStep === 0) setPhase("link");
+                          if (tutorialStep === 1) {
+                            // nothing changes phase, just text changes
+                          }
+                          if (tutorialStep === 2) {
+                            setCompareRag(true);
+                          }
+                          setTutorialStep(tutorialStep + 1); 
                         }}
-                        disabled={animating}
-                        className="w-full flex items-center justify-center gap-2 text-muted-foreground hover:text-white font-medium py-2 px-4 rounded-lg transition-all disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white font-semibold py-3 px-6 rounded-lg transition-all active:scale-[0.98]"
                       >
-                         <RotateCcw className="w-4 h-4" /> Start Over
+                        {stepContent.buttonText} <ArrowRight className="w-4 h-4" />
                       </button>
-                    </div>
-                  )}
+                    )}
+                    
+                    {tutorialStep === 3 && (
+                      <div className="flex flex-col gap-2">
+                         <button 
+                          onClick={() => handleNodeClick(currentStory.queryNode)}
+                          disabled={animating}
+                          className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 px-6 rounded-lg transition-all active:scale-[0.98] disabled:opacity-50 shadow-[0_0_20px_rgba(0,174,239,0.3)] hover:shadow-[0_0_30px_rgba(0,174,239,0.5)]"
+                        >
+                          {animating ? (
+                            <span className="flex items-center gap-2">
+                              <div className="w-4 h-4 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin"></div>
+                              Resonating...
+                            </span>
+                          ) : (
+                            <>
+                              <Play className="w-4 h-4 fill-current" />
+                              Run Query: {currentStory.queryLabel}
+                            </>
+                          )}
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setTutorialStep(0);
+                            setPhase("ingest");
+                            setCompareRag(false);
+                            handleReset();
+                          }}
+                          disabled={animating}
+                          className="w-full flex items-center justify-center gap-2 text-muted-foreground hover:text-white font-medium py-2 px-4 rounded-lg transition-all disabled:opacity-50"
+                        >
+                           <RotateCcw className="w-4 h-4" /> Start Over
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-
               </div>
-            </div>
-          )}
+            );
+          })()}
 
         </div>
       </main>
