@@ -7,7 +7,7 @@ name = "rmm-rust"
 version = "0.1.0"
 description = "High-performance Resonant Memory Mesh kernel with Python bindings"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = {text = "Apache-2.0"}
 
 [project.optional-dependencies]
 dev = [

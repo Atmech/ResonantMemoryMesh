@@ -3,14 +3,14 @@
 **Affan Tanke**
 
 ## Abstract
-Large language models demonstrate remarkable reasoning capabilities but suffer from two critical limitations: lack of persistent memory and collapse at logical phase transitions. Current retrieval-augmented generation approaches treat memory as a semantic database, relying on vector similarity to surface relevant information. This paradigm fails catastrophically when causal chains span semantic discontinuities or when logical complexity exceeds the model's intrinsic reasoning threshold. We introduce Resonance Memory Mesh (RMM), an architecture that models memory as a dissipative dynamical system where retrieval emerges from energy propagation through topological structure. By offloading causal chain traversal to an external substrate, RMM acts as a cognitive stabilizer that maintains retrieval coherence across semantic discontinuities where standard semantic search collapses. We demonstrate that associative recall, modeled as a physical process rather than a spatial search problem, enables retrieval across semantic discontinuities that vector similarity cannot bridge. We demonstrate successful retrieval across a multi-hop causal chain where traditional methods achieve infinite rank, while maintaining 0.36ms query latency through a zero-copy Rust kernel.
+Large language models demonstrate remarkable reasoning capabilities but suffer from two critical limitations: lack of persistent memory and collapse at logical phase transitions. Current retrieval-augmented generation approaches treat memory as a semantic database, relying on vector similarity to surface relevant information. This paradigm fails catastrophically when causal chains span semantic discontinuities or when logical complexity exceeds the model's intrinsic reasoning threshold. We introduce Resonance Memory Mesh (RMM), an architecture that models memory as a dissipative dynamical system where retrieval emerges from energy propagation through topological structure. By offloading causal chain traversal to an external substrate, RMM acts as a cognitive stabilizer that maintains retrieval coherence across semantic discontinuities where standard semantic search collapses. We demonstrate that associative recall, modeled as a physical process rather than a spatial search problem, enables retrieval across a five-hop causal chain where traditional methods achieve infinite rank — while maintaining 0.36ms query latency through a zero-copy Rust kernel.
 
 ## 1. Introduction
-The transformer architecture revolutionized natural language processing by showing that attention mechanisms could replace recurrence for sequence modeling [10]. However, transformers remain stateless—each inference operates in isolation, disconnected from accumulated context. More critically, recent work by Zhang et al. [12] has identified a fundamental limit in large language model reasoning: the Logical Phase Transition (LPT). They demonstrate that model accuracy does not degrade smoothly with complexity; instead, it collapses abruptly beyond a critical threshold—effectively a "melting point" for logic.
+The transformer architecture revolutionized natural language processing by showing that attention mechanisms could replace recurrence for sequence modeling [3]. However, transformers remain stateless—each inference operates in isolation, disconnected from accumulated context. More critically, recent work by Zhang et al. [11] has identified a fundamental limit in large language model reasoning: the Logical Phase Transition (LPT). They demonstrate that model accuracy does not degrade smoothly with complexity; instead, it collapses abruptly beyond a critical threshold—effectively a "melting point" for logic.
 
-The standard solution, retrieval-augmented generation (RAG) [7], augments model inputs with relevant memories retrieved through semantic search. However, this approach embodies what we term the Flashcard Fallacy: the assumption that memory can be adequately modeled as independent facts indexed by vector similarity. While cosine distance in embedding space correlates with semantic relatedness, it fails as a proxy for inferential relevance when causal chains span semantic discontinuities. As the Logical Complexity Metric (LoCM) increases, internal attention mechanisms fail to maintain long-range causal coherence, triggering the phase transition collapse.
+The standard solution, retrieval-augmented generation (RAG) [6], augments model inputs with relevant memories retrieved through semantic search. However, this approach embodies what we term the Flashcard Fallacy: the assumption that memory can be adequately modeled as independent facts indexed by vector similarity. While cosine distance in embedding space correlates with semantic relatedness, it fails as a proxy for inferential relevance when causal chains span semantic discontinuities. As the Logical Complexity Metric (LoCM) increases, internal attention mechanisms fail to maintain long-range causal coherence, triggering the phase transition collapse.
 
-We propose reconceptualizing memory retrieval as a physical process that operates external to the model's internal reasoning. Rather than searching for semantic matches, we model memory as a dissipative dynamical system [1] where query activation initiates energy propagation through weighted edges. Relevant memories surface through resonance—the natural tendency of coupled systems to activate in response to perturbation—independent of semantic similarity. By offloading causal chain traversal to a deterministic topological substrate, RMM acts as a cognitive stabilizer that maintains reasoning coherence across complexity thresholds where internal attention mechanisms fail.
+We propose reconceptualizing memory retrieval as a physical process that operates external to the model's internal reasoning. Rather than searching for semantic matches, we model memory as an energy-based dynamical system [1] where query activation initiates energy propagation through weighted edges. Relevant memories surface through resonance—the natural tendency of coupled systems to activate in response to perturbation—independent of semantic similarity. By offloading causal chain traversal to a deterministic topological substrate, RMM acts as a cognitive stabilizer that maintains reasoning coherence across complexity thresholds where internal attention mechanisms fail.
 
 To be clear, we are not suggesting RMM replaces attention. Attention is for processing; the mesh is for retention. 
 
@@ -25,11 +25,14 @@ Our contributions are:
 
 **Spreading Activation.** Collins and Loftus [5] proposed spreading activation as a model of human semantic memory, where concepts activate related concepts through weighted connections. Anderson [4] formalized this as a computational model. RMM implements spreading activation with explicit stability guarantees and engineering optimizations for production deployment.
 
-**Memory-Augmented Neural Networks and Graph Retrieval.** Weston et al. [8] introduced memory networks for reading and writing to external memory. Lewis et al. [6] demonstrated standard RAG for knowledge-intensive tasks. Recent systems like GraphRAG and Graphiti attempt to capture broader relational structures. However, they fundamentally remain static knowledge repositories. Crucially, they still rely on semantic similarity for initial graph entry, meaning they fail to solve the semantic discontinuity problem. If the context vector fails to retrieve the correct entry node, the entire explicitly reasoned graph remains disconnected from the agent's logic.
+**Memory-Augmented Neural Networks and Graph Retrieval.** Weston et al. [8] introduced memory networks for reading and writing to external memory. Lewis et al. [6] demonstrated standard RAG for knowledge-intensive tasks. RAPTOR [12] extends RAG through recursive tree-based abstractive summarization, improving multi-hop coverage but still relying on embedding-space retrieval as the primary entry mechanism. HippoRAG [13], drawing inspiration from hippocampal indexing theory, uses a knowledge graph to connect related passages; however, it still depends on semantic similarity for graph entry, leaving the semantic discontinuity problem unsolved. Recent systems like GraphRAG and Graphiti similarly remain static knowledge repositories that fail when the entry vector cannot locate the correct starting node. A concurrent taxonomy of agent memory systems [16] organizes memory by form, function, and dynamics; our contribution specifically addresses the retrieval dynamics dimension, demonstrating that topology-driven propagation outperforms embedding-space search for causally structured knowledge.
 
 **Logical Reasoning Limits.** Zhang et al. [11] recently identified Logical Phase Transitions in LLM reasoning—critical complexity thresholds beyond which model accuracy collapses abruptly to near-random performance. They propose neuro-symbolic curriculum tuning to delay this transition from within the model. However, we think it's more pragmatic to simply side-step the issue: rather than fighting the phase transition from inside the model's architecture, we offload the topological load to an external memory substrate. By maintaining causal chains in an external dissipative system, RMM circumvents the transition entirely.
 
+**Energy-Based and Modern Hopfield Associative Memory.** Ramsauer et al. [14] showed that modern continuous Hopfield networks with polynomial energy functions have exponentially large storage capacity, formalizing the theoretical basis for high-dimensional associative recall. Kanerva's Sparse Distributed Memory [15] similarly demonstrated that distributed content-addressable memory can retrieve information under partial or noisy cues. RMM inherits this associative philosophy but externalizes it as a graph substrate with explicit causal topology rather than as a weight matrix.
+
 **Vector Search Infrastructure.** Modern vector databases use approximate nearest neighbor algorithms [9] with HNSW indices [10] for efficient similarity search. These provide the entry point identification for RMM but cannot replace resonance-based propagation for causal retrieval.
+
 
 ## 3. The Flashcard Fallacy
 Traditional RAG operates through a straightforward pipeline: embed the query, retrieve top-K semantically similar documents, inject context into the LLM prompt. This has computational complexity O(d·log N) for approximate nearest neighbor search where d is embedding dimension and N is corpus size.
@@ -43,8 +46,10 @@ When semantic discontinuities occur, RAG fails regardless of retrieval depth K b
 ## 4. Resonance Memory Mesh
 We treat memory not as a database but as a physical system governed by energy dynamics. Each node possesses an energy state that responds to incoming activation. Energy propagates through weighted edges according to dissipative dynamics, gradually decaying while spreading through the mesh.
 
+**Definition 2 (Resonance).** We use the term *resonance* to describe the phenomenon where a node accumulates energy from multiple upstream sources within a single propagation step. In the BFS propagation kernel, energy transfers from all active frontier nodes are summed per-target before activation (Algorithm 1, step 2c). A node *resonates* when its topological position causes it to receive energy from multiple convergent paths simultaneously, resulting in accumulated activation exceeding that of any single incoming path. This mechanism is analogous to constructive interference in coupled physical systems and distinguishes RMM from single-path graph traversal.
+
 ### 4.1 Node Initialization and Initial Energy Assignment
-Before resonance propagation begins, seed nodes must be identified and injected with an initial energy payload. This occurs in two steps:
+Before resonance propagation begins, seed nodes must be identified and injected with an initial energy payload. This occurs in three steps:
 
 **Step 1 — Seed Identification:** Given a query vector $q \in \mathbb{R}^d$, the system computes cosine similarity against all node embeddings in the L2 store:
 
@@ -54,10 +59,18 @@ $$
 
 Nodes exceeding a similarity threshold $\tau$ (or the top-K nodes by similarity score) are designated as seed nodes $\mathcal{S} \subseteq V$.
 
-**Step 2 — Energy Injection:** Each seed node $i \in \mathcal{S}$ receives an initial energy payload proportional to its similarity score, scaled by its significance:
+**Step 2 — Hybrid Ignition Score:** Before energy injection, candidate seed nodes are ranked by a blended score that combines semantic similarity with node significance, weighted by a mixing coefficient $\alpha_{ign} \in [0,1]$ (default 0.7):
 
 $$
-e_i(0) = \text{sim}(q, v_i) \cdot S(i)
+\text{score}(i) = \alpha_{ign} \cdot \text{sim}(q, v_i) + (1 - \alpha_{ign}) \cdot S(i)
+$$
+
+The top-$K$ candidates by this score become the active seed set $\mathcal{S}$.
+
+**Step 3 — Energy Injection:** Each seed node $i \in \mathcal{S}$ receives a fixed initial energy payload scaled by its significance:
+
+$$
+e_i(0) = E_{max} \cdot S(i)
 $$
 
 All non-seed nodes initialize with zero energy: $e_j(0) = 0$ for $j \notin \mathcal{S}$.
@@ -70,25 +83,26 @@ Let $G = (V, E, W)$ represent a directed weighted memory graph where $V$ contain
 **State Update Rule.** The energy state evolves according to:
 
 $$
-e_j(t+1) = \text{clip}_{[0,1]}\left(e_j(t) \cdot e^{-\lambda \Delta t} + \sum_{i \in \mathcal{F}_t} e_i(t) \cdot \beta \cdot w_{ij} \cdot S(i)\right)
+e_j(t+1) = \text{clip}_{[0,1]}\left(e_j(t) \cdot e^{-\lambda \Delta t} + \sum_{i \in \mathcal{F}_t} e_i(t) \cdot \beta \cdot w_{ij}\right)
 $$
 
 Where:
 - $\lambda$ is the decay constant controlling forgetting rate
 - $\beta \in (0,1)$ is the dissipative gain factor
 - $\mathcal{F}_t \subseteq V$ is the active frontier (nodes with $e > \epsilon$)
-- $w_{ij}$ is the normalized edge weight from node $i$ to $j$
-- $S(i)$ is the Node Significance multiplier
+- $w_{ij}$ is the edge weight from node $i$ to $j$, with $w_{ij} \in [0,1]$
+
+Note: $S(i)$ influences initial energy injection at node $i$ (§4.1) but does not appear in the per-hop transfer rule; this keeps the update equation analytically clean.
 
 **Stability Conditions.** The system maintains two invariants:
 
-**Invariant 1 (Energy Dissipation):** We enforce $\beta < \lambda$ through parameter selection. Combined with exponential decay and clamping, this ensures energy cannot increase without external input, preventing unstable feedback loops.
+**Invariant 1 (Energy Dissipation):** We enforce $\beta < 1$ through parameter selection. Combined with exponential decay and clamping to $[0,1]$, energy cannot accumulate without external input, preventing unstable feedback loops.
 
-**Invariant 2 (Column Stochasticity):** For all $j$, $\sum_i |w_{ij}| \le 1.0$. This ensures no node can project more energy than it possesses, preventing explosive spreading.
+**Invariant 2 (Per-Edge Weight Bound):** For all edges, $w_{ij} \in [0,1]$. Combined with $\beta < 1$, the transfer $e_i \cdot \beta \cdot w_{ij} < e_i$, so no source node can project more energy than it possesses. Normalization is applied per-outgoing-edge at AutoLinker construction time (edge weight = cosine similarity ∈ [0,1]).
 
-**Theorem 1.** Under Invariants 1 and 2, the system converges to a stable state in finite time with all energy states approaching zero in the absence of sustained input.
+**Theorem 1.** Under Invariants 1 and 2 and with seed injection occurring only at $t=0$, the system converges to $e_j = 0$ for all $j$ in at most $H$ steps, where $H$ is the BFS hop limit.
 
-*Proof sketch:* The total energy $E_{total}(t) = \sum_j e_j(t)$ forms a Lyapunov function. Under dissipative gain $\beta < 1$ and exponential decay, $E_{total}$ decreases monotonically. Since energy is bounded below by zero, the system must converge. $\square$
+*Proof:* Seed nodes receive energy $e_i(0) = E_{max} \cdot S(i)$, a one-time injection. For all subsequent hops $t \ge 1$, no external energy enters the system. At each hop: (i) existing energy decays by factor $e^{-\lambda \Delta t} < 1$; (ii) transferred energy is bounded by $e_i(t) \cdot \beta \cdot w_{ij} < e_i(t)$ (Invariant 2, $\beta < 1$); (iii) the clip operation enforces $e_j \le 1$. The BFS terminates after $H$ hops by construction, at which point no further propagation occurs. With $\beta < 1$ and $\lambda > 0$, subsequent passive decay drives all energies to zero. $\square$
 
 ### 4.3 Competitive Inhibition
 As the mesh scales, uncontrolled spreading can lead to saturation where many nodes maintain non-negligible energy. To prevent this "heat death," we implement competitive inhibition inspired by lateral inhibition in neural systems.
@@ -102,12 +116,33 @@ $$
 where $\mathcal{A}$ is the set of active nodes. This forces nodes to compete for limited activation capacity, ensuring only the most resonant causal paths survive propagation.
 
 ### 4.4 Computational Complexity
-The propagation phase has complexity $\mathcal{O}(H \cdot F)$ where $H$ is the maximum number of hops and $F$ is the maximum frontier size per hop. Since $H$ and $F$ are hard-capped constants ($H=5$, $F=50$ in our implementation), propagation is $\mathcal{O}(1)$ with respect to corpus size after entry point identification.
+The propagation phase has complexity $\mathcal{O}(H \cdot F)$ where $H$ is the maximum number of hops and $F$ is the maximum frontier size per hop. Since $H$ and $F$ are design-time constants ($H=5$, $F=50$ by default), propagation is $\mathcal{O}(H \cdot F) = \mathcal{O}(1)$ with respect to corpus size $N$ after entry point identification. This is a constraint-bounded constant rather than an algorithmic invariant — the caps trade exhaustive traversal for deterministic latency regardless of graph scale.
 
 This contrasts with standard RAG's $\mathcal{O}(K)$ retrieval phase which scales with result set size. More critically, RMM's constant-time guarantee applies to the reasoning phase—traversing multi-hop chains requires no additional search operations.
 
-### 4.5 Emotional Salience and Significance
-The $S(i)$ parameter amplifies energy propagation, essentially modeling emotional salience computationally. The biological brain consolidates and associates high-affect events more broadly; RMM models this by allowing energy to propagate further from structurally or emotionally "significant" nodes. This provides a biophysically grounded implementation of cognitive prominence within an artificial memory web, acknowledging analogous significance-weighted mechanisms in continuous Hopfield networks and Sparse Distributed Memory.
+**Table 1: System Hyperparameters**
+
+| Parameter | Symbol | Default | Description |
+|---|---|---|---|
+| Dissipative gain | $\beta$ | 0.5 | Energy transfer fraction per hop |
+| Decay rate | $\lambda$ | 0.1 | Exponential decay constant (per second) |
+| Max hops | $H$ | 5 | BFS depth limit |
+| Energy ceiling | $E_{max}$ | 10.0 | Competitive inhibition threshold |
+| Activation threshold | $\varepsilon$ | 0.01 | Minimum energy to remain active |
+| Max neighbors | $F$ | 50 | Frontier cap per hop |
+| Min edge weight | $w_{min}$ | 0.05 | Edge filter floor |
+| AutoLink threshold | $\tau_{link}$ | 0.6 | Min cosine similarity to create edge |
+| Ignition blend | $\alpha_{ign}$ | 0.7 | Hybrid Ignition: similarity vs. significance weight (§4.1) |
+| Hub dampening | $\alpha_{hub}$ | 0.5 | Log-scale dampening for high-degree hub nodes (§5) |
+| Seed candidates | $K_{seed}$ | $3 \times$ top_n | Candidate pool size for Hybrid Ignition (§4.1) |
+
+### 4.5 Node Significance $S(i)$
+
+**Definition.** $S(i) \in [0, 1]$ is the **Node Significance** scalar assigned at ingestion time (default $S(i) = 1.0$). Its role is two-fold: (i) it scales the initial energy payload at seed nodes ($e_i(0) = E_{max} \cdot S(i)$, see §4.1), and (ii) it controls eviction priority via the V-LRU score (§6). It does not modulate per-hop transfer, keeping the propagation rule analytically separable from the salience model.
+
+In the current implementation, $S(i)$ is supplied by the ingesting agent and represents domain-level importance (e.g., emotionally salient events, high-confidence sources, temporally recent observations). This is a deliberate design choice: the memory substrate is agnostic to salience semantics; the agent decides what matters. Computing $S(i)$ from graph topology (betweenness centrality, eigenvector centrality) is left as future work.
+
+The biological analogy is apt — the brain consolidates and associates high-affect events more broadly [5]. RMM implements this by giving high-significance nodes a larger initial energy payload, allowing resonance to spread further through the causal neighborhood of prominent memories. This mirrors significance-weighted mechanisms in Sparse Distributed Memory [15] and continuous Hopfield networks [14].
 
 ### 4.6 RAG as a Degenerate Case
 By parameterizing retrieval physically, RMM creates a tunable "cognition dial." Depending on the chosen parameters, RMM exhibits distinctly different behavioral modes:
@@ -125,6 +160,28 @@ When operating with a low β and high λ_decay, RMM strictly reproduces standard
 ## 5. System Architecture
 The mathematical formulation requires careful engineering to achieve production-grade performance. We employ a bimodal architecture separating hot computational state from persistent storage.
 
+**Algorithm 1: AtomicPing BFS Propagation**
+```
+Input: entry_ids S, cache L1, config (β, λ, H, F, ε, E_max)
+Output: ranked node list by accumulated energy
+
+1. FOR each s ∈ S:
+      e_s ← E_max · S(s)          // Ignition (one-time injection)
+      frontier ← frontier ∪ {s}
+2. FOR hop = 1 to H:
+   a. transfers ← {}
+   b. FOR EACH src ∈ frontier (parallel):
+         FOR EACH edge (src→j, w_ij) in top-F neighbors of src [w ≥ w_min]:
+            e_transferred ← e_src · β · w_ij · γ(degree(src))
+            IF e_transferred ≥ ε: transfers[j] += e_transferred
+   c. FOR EACH target j ∈ transfers:
+         e_j ← clip(e_j · exp(−λΔt) + transfers[j], 0, 1)
+   d. frontier ← {j ∈ transfers | j not yet visited as source}
+3. Apply competitive inhibition (§4.3)
+4. Return nodes sorted by e_j descending
+```
+where $\gamma(d)$ is the hub-dampening factor: $\gamma = 1.0$ if $d \le$ hub_threshold, else $1 / (1 + \alpha_{hub} \cdot \ln(d / \text{hub\_threshold}))$. Note: $\alpha_{hub}$ and $\alpha_{ign}$ are distinct parameters (Table 1). The theoretical convergence proof in Theorem 1 sets $\gamma = 1.0$ for analytical simplicity; hub dampening is an implementation-level stabilizer for high-degree nodes and does not affect the convergence guarantee.
+
 ### 5.1 Bimodal Memory Design
 **L1 Cache (Active Mesh).** The propagation-critical state resides in a Rust kernel using lock-free concurrent data structures maintaining: current energy states, edge weights, and the frontier queue.
 **L2 Store (Persistent Graph).** PostgreSQL with pgvector extensions provides durable storage for graph topology, embeddings, and metadata.
@@ -136,7 +193,11 @@ To eliminate language boundary overhead between Python orchestration and the Rus
 Energy state updates are buffered in a sharded mutex structure. A background thread periodically flushes buffers to L2. If database writes fail, updates are merged back into the buffer rather than discarded, ensuring no memory loss.
 
 ### 5.4 Graph Construction
-Edges are systematically inferred during corpus ingestion rather than relying exclusively on manual curation. Through automated entity extraction, nodes representing discrete facts, events, or entities are dynamically linked. Edge weights are subsequently assigned based on measured semantic interaction densities and explicit logical dependencies extracted from the text. 
+Edges are constructed automatically at ingestion time via the **AutoLinker** module. When a new node is ingested, its embedding vector is compared via cosine similarity against all existing node embeddings in the L2 vector store. Nodes exceeding a proximity threshold $\tau_{link}$ (default 0.6) are connected with **bidirectional** edges whose weights equal the measured cosine similarity. The AutoLinker limits connections to the top-$K_{link}$ nearest neighbors ($K_{link} = 10$) to bound edge density and prevent hub formation during bulk ingestion.
+
+This produces a sparse, locally-connected graph where edge weight directly encodes semantic proximity between memory fragments. Since the AutoLinker runs synchronously at ingest time, the mesh is always fully connected before a query is issued. Manual edges can be added via the `connect()` API for causal relationships not captured by embedding proximity — e.g., explicit logical dependencies or temporal orderings.
+
+A critical implication is that graph construction quality directly bounds retrieval quality: if two causally linked nodes share sufficiently similar embeddings ($>\tau_{link}$), the AutoLinker will connect them, and resonance will traverse the link. Nodes connected only by logical implication with no semantic overlap must be linked manually.
 
 ### 5.5 Predictive Batch Warming
 To mitigate latency penalties when a node is faulted into the L1 cache from the L2 store, we immediately perform a predictive batch fetch of its top-$K$ strongest neighbors ($K=10$). This guarantees exactly two database round trips to populate an entire local neighborhood efficiently.
@@ -191,6 +252,8 @@ Energy (log scale)                              Semantic Similarity
 ```
 *Left: Energy decays exponentially across hops but remains above retrieval threshold, enabling rank 9 success. Right: Semantic similarity provides no gradient—flat at 0.28 (orthogonal). The gap between curves represents the retrieval space uniquely accessible through topological resonance.*
 
+All benchmark results use Standard mode parameters: $\beta = 0.7$, $\lambda = 0.1$, $H = 5$, $F = 50$, $\varepsilon = 0.005$. These match the values used in our reference implementation and correspond to Standard mode in Table 4.6.
+
 ### 7.2 Three-Group Comparison
 - **Group A: Standard RAG.** Top-100 retrieval using cosine similarity. Result: Target node not retrieved (rank > 100). The semantic discontinuity prevents the target from entering the candidate set.
 - **Group B: Reranked RAG.** Top-100 retrieval followed by cross-encoder reranking. Result: Target node not retrieved. Reranking cannot surface candidates that don't exist in the initial retrieval set.
@@ -215,8 +278,10 @@ Rather than trying to force the LLM to learn and infer massive context bounds as
 Biological systems similarly rely on networks where concepts prime related concepts through spreading activation [5]. Human memory resists logical phase collapse because it leans on distributed associative recall rather than isolated logical operations. RMM brings this architectural phenomenon to language models.
 
 ### 8.3 Limitations and Extensions
-- **State Optimization Limitations:** This represents a known architectural limitation rather than a design choice. In-memory state diverging from durable storage introduces potential consistency violations under concurrent write loads. We consider continuous background replication the appropriate long-term solution.
-- **Static Edge Weights:** The architecture assumes static weights established at creation. Future builds adopting Hebbian learning [7] could enable dynamic adjustments to strengthen frequently accessed semantic bridges.
+- **State Synchronization:** In-memory L1 state can diverge from durable L2 storage under concurrent write loads, a known architectural trade-off. Continuous background replication is the appropriate long-term solution.
+- **Static Edge Weights:** The architecture assumes weights established at construction time. Future builds adopting Hebbian-style learning [7] could dynamically strengthen frequently traversed bridges, enabling the graph to adapt to query patterns over time.
+- **Graph Construction Sensitivity:** AutoLinker edges are derived from embedding proximity. Causal relationships spanning large semantic distances require manual `connect()` calls. Automating logical dependency extraction (e.g., via LLM-based relation extraction at ingest time) is future work.
+- **Single Synthetic Benchmark:** The current evaluation uses a purpose-built 5-hop causal chain to isolate the semantic discontinuity problem. Validation on standard multi-hop QA benchmarks (HotpotQA, MuSiQue, 2WikiMultiHopQA) and comparison against GraphRAG and HippoRAG [13] baselines at scale are planned for follow-on work.
 
 ### 8.4 Path Forward and Complexity-Aware Operation
 Intelligence emerges from the interaction between processing (transformers) and retention (resonance mesh). Current LLMs possess sophisticated reasoning but lack persistent memory that reflects associative structure.
@@ -241,3 +306,8 @@ This work benefited from insights in dynamical systems theory, distributed syste
 [9] Johnson, J., Douze, M., and Jégou, H. (2019). Billion-scale similarity search with GPUs. *IEEE Transactions on Big Data*, 7(3), 535-547.
 [10] Malkov, Y.A. and Yashunin, D.A. (2018). Efficient and robust approximate nearest neighbor search using hierarchical navigable small world graphs. *IEEE Transactions on Pattern Analysis and Machine Intelligence*, 42(4), 824-836.
 [11] Zhang, X., et al. (2026). Logical phase transitions: Understanding collapse in LLM logical reasoning. *arXiv preprint arXiv:2601.02902*.
+[12] Sarthi, P., Abdullah, S., Tuli, A., Khanna, S., Goldie, A., and Manning, C.D. (2024). RAPTOR: Recursive abstractive processing for tree-organized retrieval. *Proceedings of the International Conference on Learning Representations*.
+[13] Gutierrez, B.J., Shu, Y., Gu, Y., Kamigaito, H., and Su, Y. (2024). HippoRAG: Neurobiologically inspired long-term memory for large language models. *arXiv preprint arXiv:2405.14831*.
+[14] Ramsauer, H., Schäfl, B., Lehner, J., Seidl, P., Widrich, M., Adler, T., Gruber, L., Holzleitner, M., Pavlović, M., Sandve, G.K., Greiff, V., Kreil, D., Kopp, M., Klambauer, G., Brandstetter, J., and Hochreiter, S. (2020). Hopfield networks is all you need. *arXiv preprint arXiv:2008.02217*.
+[15] Kanerva, P. (1988). *Sparse Distributed Memory*. MIT Press.
+[16] Hu, Y., Liu, S., Yue, Y., Zhang, G., et al. (2025). Memory in the age of AI agents. *arXiv preprint arXiv:2512.13564*.

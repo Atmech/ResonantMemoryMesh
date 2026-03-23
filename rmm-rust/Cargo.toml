@@ -3,7 +3,7 @@ name = "rmm-rust"
 version = "0.1.0"
 edition = "2021"
 description = "High-performance Resonant Memory Mesh kernel with Python bindings"
-license = "MIT"
+license = "Apache-2.0"
 
 [lib]
 name = "rmm_rust"
