@@ -141,7 +141,6 @@ rmm/
 │   └── src/
 ├── examples/
 │   └── quickstart.py
-└── docs/
 ```
 
 ---

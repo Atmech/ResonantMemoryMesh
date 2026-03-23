@@ -22,5 +22,8 @@ build/
 pypdf/
 pypdf-*.dist-info/
 
-# Site (separate repo)
+# Workspace & Generated
+.claude/
+assets/
+docs/
 knowmem-site/
