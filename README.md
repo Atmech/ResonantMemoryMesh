@@ -4,11 +4,7 @@
 
 > Memory as a physical system — not a database.
 
-[![Paper](https://img.shields.io/badge/arXiv-Resonance_is_All_You_Need-b31b1b.svg)](https://arxiv.org/) [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-
 RMM models memory as a dissipative dynamical system where retrieval emerges from energy propagation through topological structure. It enables retrieval across multi-hop causal chains where traditional RAG fails — bridging semantic discontinuities that vector similarity cannot cross.
-
-📄 **Paper:** [Resonance is All You Need: A Dissipative Dynamical System for Associative Memory in Large Language Models](https://arxiv.org/) — Affan Tanke, 2025
 
 ---
 
