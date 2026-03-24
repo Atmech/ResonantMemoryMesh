@@ -126,6 +126,34 @@ RAG similarity:     0.28 ──────────────────�
 
 ---
 
+## Configuration
+
+RMM's physics engine is controlled by a small set of parameters passed via `MeshConfig`:
+
+| Parameter | Default | Description |
+|---|---|---|
+| `beta` | 0.5 | **Dissipative Gain** — energy transfer ratio per hop. Higher = more energy propagates. |
+| `lambda_decay` | 0.1 | **Decay rate** — how fast idle nodes lose energy over time. |
+| `max_hops` | 5 | **BFS depth** — maximum causal chain length to traverse. |
+| `e_max` | 10.0 | **Heat Death limit** — energy ceiling to prevent runaway amplification. |
+| `epsilon` | 0.01 | **Pruning threshold** — nodes below this energy are excluded from results. |
+| `max_neighbors` | 50 | **Fan-out cap** — max neighbors processed per node per hop. |
+| `min_weight` | 0.05 | **Edge filter** — edges below this weight are ignored during traversal. |
+| `hub_threshold` | 100 | **Hub detection** — degree above which hub dampening activates. |
+| `hub_dampening_alpha` | 0.5 | **Hub penalty** — dampening strength for high-degree nodes. |
+
+### Tuning Guide
+
+- **Shallow graphs (2–3 hops):** Increase `beta` (0.7–0.9), reduce `max_hops` to 3.
+- **Deep causal chains (5+ hops):** Lower `beta` (0.3–0.5) so energy survives the full chain.
+- **High-churn data:** Increase `lambda_decay` (0.3+) to forget stale nodes faster.
+- **Hub-heavy graphs:** Lower `hub_threshold` and raise `hub_dampening_alpha` to prevent hubs from dominating results.
+- **Precision over recall:** Raise `epsilon` and `min_weight` to tighten the result set.
+
+Parameters can be overridden at runtime via environment variables prefixed with `RMM_` (e.g., `RMM_MAX_HOPS=3`).
+
+---
+
 ## Project Structure
 
 ```
