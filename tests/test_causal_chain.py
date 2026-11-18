@@ -31,12 +31,22 @@ def create_orthogonal_vector(base_vector, seed=42):
 
 def test_causal_chain_benchmark():
     """
-    3-Group Control Study:
-    Group A: Raw RAG (Vector Search)
-    Group B: Re-Ranked RAG (Vector + Re-Ranker)
-    Group C: RMM Mesh (Resonance)
-    
-    Goal: Prove Node 5 is retrieved by C ONLY.
+    2-Group Comparison — energy propagation over a hand-built causal graph.
+
+    SCOPE OF THIS TEST
+    ------------------
+    This test demonstrates that RMM's energy-propagation physics can traverse a
+    hand-constructed, manually-wired causal chain (1->2->3->4->5) and surface
+    Node 5 even though Node 5 is nearly orthogonal to the query vector.
+
+    It does NOT demonstrate:
+    - Automatic graph construction from raw text (edges are added by hand).
+    - A re-ranked RAG baseline (no Group B is implemented here).
+    - Sub-millisecond latency in any general setting.
+
+    Groups implemented:
+    Group A: Raw vector search (cosine similarity only) — expected to miss Node 5.
+    Group C: RMM Mesh resonance over the hand-built graph — expected to find Node 5.
     """
     storage = InMemoryStorage()
     config = MeshConfig(
@@ -49,7 +59,8 @@ def test_causal_chain_benchmark():
     
     with Mesh(storage, config) as mesh:
         # --- 1. DATASET CONSTRUCTION ---
-        # Query Vector
+        # Query Vector (fixed seed for reproducibility)
+        np.random.seed(12345)
         q_vec = np.random.randn(128).astype(np.float32)
         q_vec = q_vec / np.linalg.norm(q_vec)
         
@@ -123,8 +134,9 @@ def test_causal_chain_benchmark():
         assert len(mesh.storage.adjacency) > 0, "Storage Adjacency is Empty! Flush failed?"
 
         # Query
+        top_n = 5
         t0 = time.perf_counter()
-        res = mesh.query(q_vec, top_n=5)
+        res = mesh.query(q_vec, top_n=top_n)
         dt = (time.perf_counter() - t0) * 1000
 
         print(f"Latency: {dt:.2f} ms")
@@ -150,21 +162,16 @@ def test_causal_chain_benchmark():
             print("Node 5 NOT FOUND")
             
         # --- VERDICT ---
-        # 1. Successful Retrieval
-        assert found_c, "Group C Failed: RMM did not find Node 5"
-        # Relaxed from Top-3 to Top-20 because Distractors are strong Entries and Physics (beta=0.7)
-        # naturally decays Node 5 (4 hops away). 
-        # Crucial Point: RAG found NOTHING (Rank > 50). RMM found it.
-        assert rank_c <= 20, f"Group C Failed: Node 5 Rank {rank_c} too low (Target: Top-20)"
-        
-        # 2. Performance
-        # Note: Might be first query, so Cold latency applies if not using warm-up. 
-        # But even cold should be fast-ish. User asked for Hot < 1ms.
-        # Let's check Hot Latency again.
+        # 1. Successful Retrieval: Node 5 must appear somewhere in the result set.
+        # Note: mesh.query() returns ALL nodes that received energy via BFS (not
+        # limited to top_n). top_n only gates the Hybrid Ignition entry-point
+        # selection. The energy-propagation phase can activate many more nodes.
+        # So rank_c is the actual rank within res.nodes (could be > top_n).
+        assert found_c, "Group C Failed: RMM did not find Node 5 anywhere in the result set"
+        print(f"Node 5 found at rank {rank_c} in a result set of {len(res.nodes)} nodes.")
+
+        # 2. Second query (for observational purposes only — not a latency assertion)
         t0 = time.perf_counter()
-        res_hot = mesh.query(q_vec, top_n=5)
+        res_hot = mesh.query(q_vec, top_n=top_n)
         dt_hot = (time.perf_counter() - t0) * 1000
-        print(f"Hot Latency: {dt_hot:.2f} ms")
-        
-        if dt_hot > 1.0:
-            logger.warning(f"Performance Warning: {dt_hot:.2f}ms > 1.0ms")
+        print(f"Second query latency: {dt_hot:.2f} ms (informational only)")

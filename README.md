@@ -18,8 +18,8 @@ RMM solves this with **topological resonance**: energy propagates through weight
 |---|---|---|
 | Retrieval | Cosine similarity (semantic) | Energy propagation (topological) |
 | Multi-hop causal chains | ❌ Fails at semantic gaps | ✅ Traverses 5+ hops |
-| Hot query latency | ~10ms | **0.36ms** |
-| Throughput | — | **900+ qps** |
+| Hot query latency | — | **~2ms median** (warm, in-memory, 1000 nodes, single core — measured; see `benchmarks/latency.py`) |
+| Throughput | — | **~490 sequential qps** (single-threaded, in-memory, 1000 nodes — measured; concurrent throughput not yet benchmarked) |
 
 ---
 

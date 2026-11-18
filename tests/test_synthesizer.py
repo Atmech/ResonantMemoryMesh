@@ -1,9 +1,8 @@
 import pytest
 import uuid
-from rmm.core.synthesizer import StructuralSynthesizer
-from rmm.models import Node, Edge
-from src.storage import InMemoryStorage
-from src.synthesizer import generate_structural_rationale
+from rmm import Node, Edge
+from rmm.adapters.memory import InMemoryStorage
+from rmm.core.synthesizer import generate_structural_rationale
 
 def test_synthesizer_format():
     storage = InMemoryStorage()
@@ -41,9 +40,9 @@ def test_synthesizer_format():
     assert "0.99" not in output # Weight is 0.9
     assert "--[0.90]-->" in output or "--[0.80]-->" in output
     
-    # Count lines
+    # Count lines: synthesizer outputs 1 confidence header + up to 2 edge lines = max 3 lines
     lines = output.strip().split('\n')
-    assert len(lines) <= 2 # Top 2 edges
+    assert len(lines) <= 3  # [Confidence: ...] header + up to 2 edge lines
     assert len(lines) >= 1
 
     # Test Truncation

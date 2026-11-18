@@ -1,167 +1,143 @@
 \documentclass[11pt,a4paper]{article}
-\usepackage[utf8]{inputenc}
-\usepackage{amsmath, amssymb, amsthm}
-\usepackage{graphicx}
+\usepackage[margin=25mm,top=22mm,bottom=24mm]{geometry}
 \usepackage{booktabs}
-\usepackage{hyperref}
-\usepackage{tikz}
-\usepackage{geometry}
-\geometry{margin=1in}
-
-\title{\textbf{Resonance Is All You Need: A Dissipative Dynamical System for Agentic Associative Memory}}
-\author{RMM Project Contributors}
-\date{\today}
-
+\usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={Resonance Is All You Need},pdfauthor={Affan Tanke},pdfsubject={Spreading activation and evidence retrieval on MuSiQue}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt plus 1pt}
+\raggedbottom
 \begin{document}
-
-\maketitle
+\begin{center}
+{\LARGE\bfseries Resonance Is All You Need\par}
+\vspace{5pt}
+{\large Testing spreading activation for multi-hop evidence retrieval\par}
+\vspace{7pt}
+Affan Tanke\\[2pt]
+{\small 19 November 2026}
+\end{center}
 
 \begin{abstract}
-Modern Large Language Models (LLMs) possess remarkable reasoning capabilities but lack persistent, contextually aware associative memory. Current Retrieval-Augmented Generation (RAG) approaches treat memory as a static database, relying on vector similarity to surface relevant information—an approach we term the \textbf{Flashcard Fallacy}. We introduce the \textbf{Resonant Memory Mesh (RMM)}, a fundamentally different architecture that models memory as a \textbf{dissipative dynamical system}. By treating memory retrieval as energy propagation through a topological mesh equipped with degree-aware hub dampening and adaptive density tuning, we demonstrate the ability to recover causally-linked information across five-hop chains where traditional semantic search fails entirely. We achieve sub-millisecond query latency (\textbf{0.36ms}) through a bimodal Rust-kernel architecture. This work establishes memory resonance as the new paradigm for associative recall in agentic systems.
+A paragraph can identify the next piece of evidence without resembling the original question. Motivated by associative recall, the Resonant Memory Mesh (RMM) starts from semantically similar paragraphs and spreads activation along weighted links. We ask whether a newly reached paragraph can displace a starting paragraph within a fixed retrieval budget. We prove that, for a fresh mesh under the evaluated update rule, every starting paragraph scores at least as highly as every newly reached paragraph. Graph expansion can change membership in the top five only through ties. On 300 two-hop MuSiQue questions, RMM with shared-entity links retrieved 43.7\% of supporting paragraphs, compared with 66.5\% for cosine search and 60.2\% for personalized PageRank on the same graph. Breaking activation ties by query similarity reproduced the cosine top-five set on all 300 questions. A disjoint follow-up spanning two to four hops reproduced the set on 300 of 300 questions. On that follow-up, native graph ranking introduced 106 supporting paragraphs and displaced 253 that cosine search had found. In an exploratory replay that kept all five seeds and added graph suggestions, the combined list contained all supporting evidence on 103 follow-up questions. Extending cosine search to the same length per question did so on 92.
 \end{abstract}
 
 \section{Introduction}
-The architecture of artificial intelligence remains fundamentally asymmetric. While transformers have mastered the processing of information through attention mechanisms, they remain stateless inference engines. The standard solution, Retrieval-Augmented Generation (RAG), embodies the \textbf{Flashcard Fallacy}: the assumption that inferential relevance equals cosine similarity in an embedding space. 
+\textbf{The retrieval problem.} Suppose a question asks who acquired the company that supplies a manufacturer's chips. One paragraph names the supplier. A second paragraph reports the acquisition and never mentions the manufacturer. The first paragraph is valuable both for the fact it contains and for the document it can lead a reader to. A retriever with five places to fill must decide whether the acquisition report deserves one of them.
 
-This paper argues that semantic similarity is an insufficient proxy for relevance. In complex reasoning tasks, the correct context often resides in nodes that are semantically orthogonal to the query but topologically vital. Traditional RAG systems suffer from \textbf{Semantic Discontinuity}. Consider a five-hop causal chain: $A \to B \to C \to D \to E$. If the query centers on $A$, but the required answer lies in $E$, and the semantic distance between $A$ and $E$ is large (e.g., Cosine Similarity $< 0.3$), standard RAG will truncate the context at $B$ or $C$. No amount of re-ranking can bridge this gap because the target node $E$ never enters the candidate set.
+\textbf{Proposed solution.} Store each passage as a node and each association as a weighted link. Begin with the passages most similar to the question. Let each one pass activation to its neighbors, so that a passage reached through several clues can accumulate a high score. This design draws on the familiar experience of one recollection cueing another. We use \emph{resonance} for this proposed retrieval behavior. Activation is a numerical ranking variable in the implementation.
 
-We present the \textbf{Resonant Memory Mesh (RMM)}, reconceptualizing memory retrieval as a physical process of energy propagation. If node $A$ is excited, energy flows topologically through the links to eventually activate $E$, regardless of $E$’s semantic vector.
+\textbf{Criterion for success.} Give cosine search and RMM the same five places. If graph traversal helps assemble evidence, the passages it introduces should supply more missing support than the passages they displace. We measure both. We also ask a narrower question that admits a proof. Can a newly reached passage ever score higher than a starting passage under this update rule? Section~\ref{sec:applications} examines how the answers affect the choice of passages for a reader and the design of an audit for graph retrieval.
 
-\section{Methodology: Memory as Dissipative Dynamics}
-We treat the memory mesh as a physical system governed by energy conservation and dissipation. By moving memory retrieval from an $O(N)$ or $O(\log N)$ semantic search to a bounded energy envelope, we eliminate the reliance on slow LLM extraction.
+\newpage
+\section{Related work}
+Collins and Loftus proposed that activation spreads along associations in semantic memory \cite{collins}. Salton and Buckley examined spreading activation for information retrieval \cite{salton}. RMM adopts this distinction between a cue and the items it can reach, and makes a particular engineering choice about how incoming signals should accumulate. The ranking constraint below follows from that choice. Other activation rules need separate analysis.
 
-\subsection{The State Update Rule}
-For any node $j$ in the mesh, we define its energy state $e_j$ at time $t+1$ as:
+Retrieval-augmented generation couples a retriever with a generator \cite{rag}. The present comparison concerns the paragraphs supplied to a potential reader. HippoRAG provides a closely related precedent for using a graph and personalized PageRank to assemble multi-hop evidence \cite{hippo}. We use PageRank as a control on our paragraph graph. HippoRAG constructs its own knowledge graph, so the control does not reproduce the full HippoRAG system. HeLa-Mem examines a different question by strengthening associations through repeated co-activation \cite{hela}. RMM's edge weights remain fixed during the experiments reported here.
+
+\section{Retrieval model and ranking constraint}
+Let $V$ be the candidate paragraphs for a question, $q$ its normalized embedding, and $x_i$ the normalized embedding of paragraph $i$. Direct retrieval ranks by $s_i=q^\top x_i$. Let $S$ contain the $k$ paragraphs with the highest $s_i$. With equal significance, RMM selects these same paragraphs as seeds. At the start of a fresh query it assigns activation $a_i=10$ to each seed and zero to every other paragraph.
+
+A frontier node $i$ sends $\beta a_i w_{ij}$ along each retained edge of weight $w_{ij}$, with $\beta=0.5$ and a nonnegative hub adjustment when applicable. Let $d_j$ denote the sum of retained incoming transfers to target $j$ in one layer. Only targets receiving a retained transfer are updated. Their new activation is
 \begin{equation}
-e_{j}(t+1) = \max \left( 0.0, \min \left( 1.0, e_{j\_decayed}(t) + \sum_{i \in \text{Frontier}} (e_{i}(t) \cdot \beta \cdot W_{ij}) \right) \right)
+a_j \leftarrow \min\{1,\max\{0,a_j+d_j\}\}.
+\label{eq:clip}
 \end{equation}
+The Rust kernel processes up to five layers, retaining transfers of at least 0.01. The stored state also supports decay between queries. In this single-query protocol the seeds are reinitialized and the other nodes begin at zero. At completion it can multiply all scores by one common positive factor to limit total activation. The Python interface orders the activated paragraphs by their final scores.
 
-Where $e_{j\_decayed}$ is calculated via Lazy Evaluation over elapsed time $\Delta t$:
-\begin{equation}
-e_{j\_decayed} = e_j(t_{\text{last}}) \cdot \exp(-\lambda \Delta t)
-\end{equation}
+\textbf{Proposition 1 (seed dominance).} Suppose a fresh graph initializes all $k$ seeds at or above a ceiling $C>0$, initializes non-seeds at zero, applies nonnegative transfers and clips updated targets to $[0,C]$. If final normalization is a common positive scaling, no reached non-seed can strictly outrank a seed by activation.
 
-The parameter $\beta$ (Dissipative Gain, effectively set to $0.7$) controls the breadth of resonance, while $\lambda$ (Decay, effectively $1.0$) acts as the forgetting constant. The threshold $\epsilon$ (e.g., $0.005$) defines the energy level below which a signal is considered noise and pruned.
+\textit{Proof.} A seed receiving no transfer retains its initial value, at least $C$. At its first update its old value plus the incoming transfer is at least $C$, so clipping sets it to $C$. Each later update leaves it at $C$. By contrast, every update to a non-seed produces a value at most $C$. Thus $\min_{i\in S}a_i\geq\max_{j\notin S}a_j$ whenever a non-seed is present. Positive rescaling preserves the inequality. \hfill\rule{5pt}{5pt}
 
-\subsection{Stability Proofs and Invariants}
-To ensure the mesh does not enter a "Schizophrenic Feedback Loop," we enforce the following invariants:
-\begin{enumerate}
-    \item \textbf{The Energy Sink:} We enforce $\beta < \lambda$ (implicitly through clamping and dissipative gain). This ensures the system maintains Lyapunov Stability; energy cannot be created, only transferred and dissipated.
-    \item \textbf{Column Stochasticity (Spectral Radius):} We enforce that the weight matrix $W$ satisfies $\rho(W) \leq 1$ through column stochasticity ($\sum_{i} |W_{ij}| \leq 1.0$). No node can project more energy than it possesses, preventing spreading explosions.
-\end{enumerate}
+\textbf{Prediction.} With exactly $k$ output places, a newly reached paragraph can enter only by winning a tie. If the secondary ordering agrees with the seed selector at its boundary (including any equal cosine scores), the original $k$ seeds also win all cross-boundary ties. The output set must then be $S$. This is a statement about set membership. The order inside the set can change.
 
-\subsection{Computational Complexity}
-Unlike RAG, which strictly scales with database size for retrieval, RMM uses an \textbf{Atomic Ping}. Initial search remains $O(d \cdot \log N)$, but the traversal is $O(H \cdot F)$ where $H$ is the maximum allowed hops and $F$ is fan-out. Since both $H$ and $F$ are hard-capped constants, resonance retrieval resolves in $O(1)$ relative to total history size after entry pointing.
+\newpage
+\section{Experimental design}
+\textbf{Dataset and samples.} MuSiQue supplies multi-hop questions, candidate paragraphs and annotations identifying the supporting paragraphs \cite{musique}. The discovery sample consists of the first 300 eligible validation questions, each with two annotated supports. An additional 300 questions were selected without replacement from later validation rows, using a fixed random seed (20261119) and equal groups of 100 two-, three- and four-hop questions. The retrieval settings and the set-equality prediction were fixed before evaluating this follow-up. The groups receive equal weight in its pooled results. Both samples use the candidate pool supplied for each individual question.
 
-\begin{figure}[h]
-\centering
-\begin{tikzpicture}[node distance=2.5cm, main/.style = {draw, circle, text width=1.5cm, align=center}]
-    \node[main] (1) {Query Node};
-    \node[main] (2) [right of=1] {Node 1\\(Entry)};
-    \node[main] (3) [right of=2] {Node 2};
-    \node[main] (4) [right of=3] {Node 5\\(Target)};
-    
-    \draw[->, heavily dashed, line width=1.5pt] (1) -- node[above] {$W_{Q1}$} (2);
-    \draw[->, line width=1.5pt] (2) -- node[above] {$W_{12}$} (3);
-    \draw[->, line width=1.5pt, loosely dotted] (3) -- node[above] {$\dots$} (4);
-    
-    \node[above of=1, yshift=-1.5cm] {\small Ignition};
-    \node[above of=4, yshift=-1.5cm] {\small Resonance Retrieval};
-\end{tikzpicture}
-\caption{Topological Resonance traversing a Causal Chain. The Target Node shares near-zero semantic similarity with the Query Node, yet receives energy structurally.}
-\label{fig:resonance}
-\end{figure}
+\textbf{Inputs and graph construction.} The frozen \href{https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2}{\texttt{all-MiniLM-L6-v2}} encoder embeds each question and paragraph body. Each RMM condition receives its own in-memory graph and a single query. The proximity graph adds bidirectional links during ingestion to up to ten prior nearest neighbors with cosine similarity of at least 0.6, weighted by similarity. The shared-entity graph uses spaCy's \texttt{en\_core\_web\_sm} model. Two paragraphs are joined when they contain the same normalized entity name of a retained type. A pair sharing $m$ distinct names receives weight $\min(0.95,0.55+0.1m)$. A shared name establishes a potential route between paragraphs. It carries no guarantee that both paragraphs support the answer.
 
-\section{System Architecture: The Bimodal Kernel}
-To achieve the speed necessary for continuous cognitive interconnects, RMM employs a bimodal architecture that separates Cognition (L1) from Persistence (L2).
+\textbf{Comparators.} Cosine search returns the five highest-scoring paragraphs directly. Personalized PageRank uses the same weighted, undirected entity graph as the corresponding RMM condition. Its damping factor is 0.85 and its restart probabilities are proportional to positive query cosine over the candidate pool, with a uniform fallback. Thus both propagation and the way the query enters the graph differ. Neither system receives gold labels in this comparison.
 
-\subsection{Bimodal Memory Model}
-\begin{itemize}
-    \item \textbf{L1 (Active Mesh):} A high-performance, thread-safe cache resident in a Rust-FFI kernel utilizing global `DashMap` and query-local `FxHashMap` structures for lock-free concurrent access.
-    \item \textbf{L2 (Persistence):} A PostgreSQL backend using `pgvector` with HNSW indices for long-term storage and hybrid ignition.
-\end{itemize}
+\textbf{Diagnostics.} The tie intervention takes the entity-RMM scores from a single execution and reorders exact ties by descending query cosine, then by paragraph index. The activated nodes, edges and scores remain identical. Question-seeded identifiers keep paragraph IDs consistent across graph conditions. A separate label-assisted condition links consecutive gold paragraphs in candidate order with bidirectional weight 0.9. If the highest-cosine paragraph is outside the gold set, the graph also links it to the first gold paragraph. This condition quantifies the benefit or cost of access to privileged structure.
 
-\subsection{The Zero-Copy FFI Bridge}
-To eliminate the Global Interpreter Lock (GIL) tax of Python during hot traversal, Python only orchestrates the request. Pointers to the L1 cache are passed sequentially to the Rust FFI. Node identifiers are passed as raw 16-byte UUID buffers, averting string serialization overhead during the hop executions.
+\textbf{Outcomes.} For retrieved set $R_q$ and gold set $G_q$, the primary outcome is mean support recall, $|R_q\cap G_q|/|G_q|$ averaged over questions. Complete support is the fraction of questions with $G_q\subseteq R_q$. Answer hit is the fraction with a case-insensitive reference-answer substring in any retrieved paragraph. An incidental mention can count as a hit. The mechanistic outcome tests exact equality of retrieved and seed sets for each question. On the discovery sample we report percentile intervals from 10,000 paired bootstrap resamples of question-level recall differences. The hop-balanced follow-up reports descriptive results for its specified mixture.
 
-\subsection{The Swap \& Release Buffer}
-RMM solves the "Write-on-Read" latency bottleneck through asynchronous coalescing. Updates to node energy are buffered in an async sharded mutex queue. Periodic flushes write back to L2 outside the compute lock. If the database fails, requeue logic merges failed writes back into the buffer, ensuring no memory loss while maintaining sub-millisecond read times.
-
-\section{Memory Thermodynamics (V-LRU)}
-As the mesh scales, memory pressure triggers eviction. Standard LRU eviction is structurally blind. We introduce \textbf{Value-based Least Recently Used (V-LRU)} eviction:
-\begin{equation}
-\text{EvictionScore} = \frac{\text{Recency}}{\text{Significance}}
-\end{equation}
-By picking a random sample of nodes (avoiding global locks) and evicting the lowest score, RMM protects high-significance "Bridge Nodes." These topological anchor points remain in the hot cache regardless of recent access frequency, ensuring long-term causal chains remain intact. Furthermore, RMM utilizes \textbf{Predictive Batch Warming}: when a node faults into L1, it fetches its top neighbors in a single batch, minimizing cold-start database round trips.
-
-\section{Addressing Known Challenges: Ingestion, Hubs, and Tuning}
-While the Resonant Memory Mesh offers a novel topological retrieval paradigm, realizing it in production environments requires overcoming three fundamental challenges inherent to graph-based systems: the ingestion bottleneck, the super-node noise problem, and structural sensitivity to hyperparameters.
-
-\subsection{Graph Construction: The AutoLinker Pipeline}
-A common critique of memory graphs centers on the "Ingestion Bottleneck": the assumption that extracting entities and relationships requires expensive, slow, and hallucination-prone LLM calls. RMM sidesteps this through an asymmetrical ingestion model. While slow-path semantic relationship extraction is supported, RMM provides an \textbf{AutoLinker} for fast-path ingestion.
-
-The AutoLinker utilizes the existing HNSW (Hierarchical Navigable Small World) index residing in the L2 persistence layer. Upon the ingestion of a node, vector proximity searches retrieve the top-$k$ nearest neighbors in $O(d \log N)$ time. Directed edges are automatically established where the cosine similarity exceeds a specific threshold $\tau_{sim}$ (e.g., $0.6$). Consequently, the initial topological mesh is constructed entirely via algebraic operations, entirely eliminating the LLM dependency during ingestion.
-
-\subsection{Super-Node Mitigation: Degree-Aware Dampening}
-In real-world memory structures, certain ubiquitous concepts become "hubs" or super-nodes connected to thousands of contextually fragmented memories. Unmitigated, energy propagating into a hub diffuses indiscriminately, diluting the resonant signal into noise. While capping the fan-out ($F$) provides computational bounds, it fails to prioritize semantic fidelity.
-
-To counter this, the Rust kernel implements \textbf{Degree-Aware Hub Dampening}. When a node's adjacency count $D_j$ exceeds a characteristic hub threshold $D_{thresh}$, we define a dampening factor $\gamma_j$:
-\begin{equation}
-\gamma_j = \frac{1}{1 + \alpha_{hub} \log \left(\frac{D_j}{D_{thresh}}\right)} \quad \text{for } D_j > D_{thresh}
-\end{equation}
-The accumulated energy transfer becomes:
-\begin{equation}
-e_{transferred} = e_{source} \cdot \beta \cdot W_{ij} \cdot \gamma_j
-\end{equation}
-This logarithmic attenuation naturally throttles the diffusion capabilities of overly central nodes, ensuring precise resonant chains are preserved over generic semantic hubs.
-
-\subsection{Structural Robustness: Adaptive Gain Tuning}
-Static thermodynamic parameters—specifically the Dissipative Gain ($\beta$) and Decay ($\lambda$)—are exceptionally sensitive to the topological density of the mesh. A highly sparse mesh requires high gain for energy to traverse causal gaps, whereas a dense mesh requires low gain to prevent total heat death and broad retrieval of the entire database.
-
-RMM measures graph density $\rho = |E| / |V|^2$ and applies an \textbf{Adaptive Gain Tuner} at runtime to dynamically adjust network parameters:
-\begin{align}
-\beta_{adapt} &= \beta_{base} \cdot (1 - \rho)^k \\
-\lambda_{adapt} &= \lambda_{base} \cdot (1 + \rho)^k
-\end{align}
-where $k$ is a tuning sensitivity constant. This self-tuning mechanism guarantees stable wave propagation regardless of the agent's lifetime or memory accretion rate, freeing developers from static parameter calibration.
-
-\section{Empirical Validation}
-We validate RMM through a Causal Chain Benchmark ("Six Degrees of Project X") designed to test multi-hop retrieval over a 5-node chain where the target (Node 5) and the query share a cosine similarity of roughly 0.28 (orthogonally unrelated).
-
-\subsection{The Causal Chain Test}
-\begin{itemize}
-    \item \textbf{Standard RAG:} Failed entirely. Node 5 ranked at $\infty$ (never retrieved), as no semantic bridge existed into the candidate pool.
-    \item \textbf{RMM:} Successfully recovered Node 5 at \textbf{Rank 9}.
-\end{itemize}
-The resonant trace demonstrates clear energy traversal from entry to target: 
-Hop 0 (Node 1) $E = 3.09 \to \dots \to$ Hop 4 (Node 5) $E = 0.077$.
-
-\subsection{The Performance Wall}
-RMM's architectural separation yields extreme latency optimizations compared to extraction-based architectures.
-\begin{itemize}
-    \item \textbf{Cold Start (DB Dominant):} $161.82$ ms
-    \item \textbf{Hot Path (Rust Dominant):} $0.32$ ms
-\end{itemize}
-This represents a $\textbf{503.6\times}$ speedup from cold to hot execution. Overall throughput sustains at $\sim 900$ queries per second on standard hardware constraints.
-
-As documented in Table \ref{tab:latency}, the architectural limitations of LLM-dependent extraction pipelines yield median response times generally unsuited for interactive applications. RMM demonstrates multiple orders of magnitude performance superiority, yielding sub-millisecond retrieval on hot caches via raw kernel mechanics.
-
-\begin{table}[h]
-\centering
-\caption{Retrieval Latency Comparisons (p50 and p95 metrics)}
-\label{tab:latency}
-\begin{tabular}{@{}llcc@{}}
+\newpage
+\section{Results}
+\begin{center}
+\begin{tabular}{@{}lrrr@{\hspace{12pt}}rrr@{}}
 \toprule
-\textbf{System Architecture} & \textbf{Paradigm} & \textbf{p50 Latency (s)} & \textbf{p95 Latency (s)} \\ \midrule
-Mem0 (Dense) & LLM Retrieval & 0.708 & 1.440 \\
-Mem0 (Graph) & LLM Relational & 1.091 & 2.590 \\
-Full-Context Baseline & Context Stuffing & 9.870 & 17.117 \\ \midrule
-\textbf{RMM (Cold Start)} & Graph Fault-In & 0.161 & $< 0.200$ \\
-\textbf{RMM (Hot Kernel)} & Topological Res. & \textbf{$< 0.001$} & \textbf{$< 0.002$} \\ \bottomrule
+& \multicolumn{3}{c}{Two-hop discovery} & \multicolumn{3}{c}{Balanced follow-up}\\
+\cmidrule(lr){2-4}\cmidrule(l){5-7}
+Method & Recall & Complete & Hit & Recall & Complete & Hit\\
+\midrule
+Cosine & 66.5 & 38.7 & 48.3 & 57.9 & 19.7 & 56.3 \\
+RMM, proximity & 64.5 & 36.7 & 47.7 & 56.1 & 20.0 & 56.3 \\
+RMM, entities & 43.7 & 18.3 & 44.0 & 41.3 & 10.7 & 42.3 \\
+PageRank, entities & 60.2 & 39.7 & 57.0 & 51.7 & 18.7 & 48.7 \\
+\midrule
+RMM, cosine ties & 66.5 & 38.7 & 48.3 & 57.9 & 19.7 & 56.3 \\
+\midrule
+RMM, gold links & 70.7 & 43.3 & 69.7 & 61.9 & 21.7 & 63.0 \\
+\bottomrule
 \end{tabular}
-\end{table}
+\par{\small Table 1. Top-five retrieval, in percent. Each sample contains 300 questions. The final row uses gold annotations to construct the graph.}
+\end{center}
+On the discovery sample, adding proximity links and ranking by activation reduced support recall by 2.0 percentage points relative to cosine search (95\% paired interval $[-3.3,-0.7]$). On shared-entity links, RMM trailed personalized PageRank by 16.5 points ($[-21.7,-11.3]$). PageRank found a reference-answer string more often than cosine search while recovering a smaller share of the supporting evidence. This divergence matters when the objective is to give a reader the evidence needed to justify an answer.
+
+\textbf{Testing the prediction.} RMM gave the paragraphs at ranks five and six equal scores on 294 discovery questions. Its native ordering returned a different set from cosine on 275 questions. Resolving those ties by similarity raised support recall from 43.7\% to 66.5\% (paired difference $+22.8$ points, interval $[18.5,27.2]$). All 300 resulting sets matched the cosine seeds. The follow-up observed 286 cutoff ties and 300 exact set matches after the intervention. Equal mean recalls alone could conceal different paragraphs. The set comparison tests the prediction directly.
+
+\begin{center}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Follow-up group & Cosine & Entity RMM & Entity PageRank & Set matches\\
+\midrule
+2 hops & 62.5 & 48.5 & 57.0 & 100 \\
+3 hops & 61.3 & 37.3 & 52.0 & 100 \\
+4 hops & 49.8 & 38.0 & 46.0 & 100 \\
+\bottomrule
+\end{tabular}
+\par{\small Table 2. Support recall (\%) by annotated hop count. The last column counts identical top-five sets for cosine and tie-resolved RMM, out of 100.}
+\end{center}
+
+\textbf{Which evidence changed?} Relative to the cosine seeds, native entity RMM retrieved 106 additional gold paragraph occurrences across the follow-up and displaced 253 gold occurrences. These counts compare set differences within each question. They show why an individual example of a useful discovery is compatible with a lower mean recall. A five-place budget charges the retriever for the evidence it removes.
+
+\newpage
+\section{Applications}\label{sec:applications}
+\subsection*{Assembling evidence for a reader}
+A person investigating a question may need two passages together to justify an answer. Consider MuSiQue example \texttt{2hop\_\_802991\_443552} from the balanced sample. The question asks for the seat of the county containing Fort Deposit. Cosine search returned the passage placing Fort Deposit in Lowndes County and missed the one identifying Hayneville as its county seat. Entity-linked RMM returned the Hayneville passage and dropped the Fort Deposit passage. Each retrieved a necessary fact. Only their union supplied both steps of the explanation.
+
+This suggests an optional list of related passages in a document search interface. The reader keeps the five direct matches and can inspect any additional passages that appear in the graph's top five. We replayed this policy on the 300 follow-up questions. It added 698 passages across all queries (2.33 per query) and surfaced 106 additional annotated supports. The enlarged list contained every required passage for 103 questions. To separate the value of the graph from the value of reading more, we also extended cosine search to exactly the same list length on each question. That simpler policy found 88 additional supports and returned complete evidence for 92 questions. The graph supplied more missing evidence at the same passage count in this replay. The list length was set by overlap with graph retrieval, and this application was formulated after inspecting the results. A fresh sample is needed to test the size and reliability of the advantage. The evaluation measures evidence coverage and list length. Reading time and answer quality require a study with readers.
+
+\subsection*{Auditing a retriever before it feeds an AI assistant}
+An engineer can use the ranking result as a diagnostic whenever a graph search begins with $k$ direct matches and has $k$ places in the assistant's context. In the RMM interface, \texttt{Mesh.query} returns the entry IDs and scored nodes. For each labeled question, save those entry IDs and the first $k$ results with their scores. Check whether a new paragraph strictly outranks a seed at the boundary. Then count the supporting passages gained and lost. The first check shows whether the ranking rule can express a preference for new evidence. The second shows whether exercising that preference helps. The supplied evaluation code performs the gains-and-losses comparison from stored IDs, so a change to the ranking rule can be judged against the same questions.
+
+One prospective use is incident investigation. An error message might retrieve a service runbook. A dependency recorded there might lead to a change notice written in different terms. A support tool could present both sources to an engineer checking a diagnosis. Testing that application would require resolved incidents with known supporting records and a comparison at equal reading budgets. The experiments here cover benchmark passages.
+
+\newpage
+\section{Discussion}
+The bottleneck appears when a retriever converts graph activation into an ordering. Consider a seed at activation 10 and a new paragraph that receives contributions of 0.8 and 0.7. The new paragraph reaches the ceiling of 1. If the seed receives even a small retained transfer, it too ends at 1. More paths can reach the new paragraph without increasing its advantage over that seed. In this implementation the native secondary ordering can therefore decide which document reaches a reader. Restoring query similarity as the secondary score recovers the baseline selection, even after an extensive traversal.
+
+Graph construction still matters. In the discovery sample the label-assisted graph recovered 70.7\% of support, compared with 43.7\% for entity links under the same ranking rule. Changing the links changes which paragraphs join a tie and which seeds remain untouched. The label-assisted experiment therefore demonstrates a dependence on graph structure. Because it uses the answer annotations during construction, it provides no estimate of how well RMM could discover those links on a new question.
+
+\textbf{A discriminating next experiment.} On a separate corpus, hold the graph, seed count and output budget fixed. Cross two seed initializations (uniform versus similarity-weighted) with two target updates (current clipping versus unsaturated accumulation). In each condition, measure the fraction of questions where a non-seed strictly outranks a seed, then count the supporting paragraphs gained and displaced. The first measurement tests whether a change removes the ordering constraint. The second determines whether the additional freedom improves retrieval. Keeping them separate prevents a change in score range from being mistaken for an improvement in evidence quality.
+
+\textbf{Limitations.} Both samples come from the same validation split and use question-specific distractor pools. Disjoint question IDs do not establish independent source documents. The discovery sample informed the diagnosis, and the balanced sample estimates an equal mixture of hop counts. Neither estimates performance on open-corpus search. The experiments use one encoder, one graph extractor, a single output budget and fresh state per question. They do not measure generated-answer quality, latency or learning across sessions. The proof is conditional on the initialization, clipping and normalization rules. Decaying seed scores during traversal or allowing inhibitory transfers can invalidate the bound. With more output slots than seeds, new evidence can enter without displacing a seed.
 
 \section{Conclusion}
-Resonance is all you need—not as a replacement for attention, but as its missing complement. By modeling memory as a dissipative dynamical system equipped with auto-linking ingestion, hub dampening, and density-aware thermodynamics, we provide artificial agents with the ability to reason topologically, breaking the Reasoning Horizon of traditional semantic search. Infinite context is unnecessary; RMM demonstrates that maintaining a bounded energy envelope of relevant, resonant associations provides superior, instantaneous cognitive capability.
+RMM was designed to let a useful clue lead retrieval beyond the paragraphs that resemble the question. Under the evaluated rule a paragraph can be reached through multiple paths and still have no route to a strictly higher score than a starting paragraph. The numerical consequence was observable at the level of individual retrieved sets across both samples. For a fixed-size result, newly discovered evidence needs a ranking rule that can justify displacing a seed. When a reader can inspect extra passages, a different use becomes possible. Keeping the initial results and offering related passages recovered complete evidence more often than extending cosine search to the same length in the exploratory replay.
 
+\newpage
+\section*{Reproducibility and author contributions}
+The evaluation supplement includes the Python and Rust source, both runs' question IDs and paragraph indices, graph diagnostics, per-question metrics, software versions and pinned dataset and encoder revisions. Each run can be re-scored from its saved rankings and the MuSiQue validation data. The supplement documents the command for drawing the follow-up sample separately from the original prefix.
+
+Affan Tanke conceived the retrieval question and the biologically inspired design of the Resonant Memory Mesh. AI tools assisted with software implementation, study code, mathematical analysis and preparation of the manuscript.
+
+\begin{thebibliography}{9}
+\bibitem{collins} A. M. Collins and E. F. Loftus. \href{https://doi.org/10.1037/0033-295X.82.6.407}{A spreading-activation theory of semantic processing}. \emph{Psychological Review}, 82(6), 407--428, 1975.
+\bibitem{salton} G. Salton and C. Buckley. \href{https://hdl.handle.net/1813/6747}{On the use of spreading activation methods in automatic information retrieval}. Cornell University, Technical Report 88-907, 1988.
+\bibitem{rag} P. Lewis et al. \href{https://proceedings.neurips.cc/paper/2020/hash/6b493230205f780e1bc26945df7481e5-Abstract.html}{Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks}. \emph{NeurIPS}, 2020.
+\bibitem{hippo} B. Jiménez Gutiérrez et al. \href{https://arxiv.org/abs/2405.14831}{HippoRAG: Neurobiologically Inspired Long-Term Memory for Large Language Models}. \emph{NeurIPS}, 2024.
+\bibitem{hela} J. Zhu, J. Li, C. Zhang, J. Liu and M. Yang. \href{https://aclanthology.org/2026.acl-long.625/}{HeLa-Mem: Hebbian Learning and Associative Memory for LLM Agents}. \emph{ACL}, 13757--13769, 2026.
+\bibitem{musique} H. Trivedi, N. Balasubramanian, T. Khot and A. Sabharwal. \href{https://aclanthology.org/2022.tacl-1.31/}{MuSiQue: Multihop Questions via Single-hop Question Composition}. \emph{Transactions of the ACL}, 10, 539--554, 2022.
+\end{thebibliography}
 \end{document}

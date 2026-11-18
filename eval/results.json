@@ -1,0 +1,108 @@
+{
+  "dataset": "musique",
+  "n": 300,
+  "ks": [
+    2,
+    5,
+    10
+  ],
+  "auto_link_threshold": 0.6,
+  "total_time_s": 315.34,
+  "no_ignite": {
+    "proximity": 0,
+    "extracted": 0,
+    "oracle": 0
+  },
+  "extracted_graph_stats": {
+    "avg_edges_per_q": 33.4,
+    "avg_entities_per_para": 7.96,
+    "questions_with_graph": 300
+  },
+  "results": {
+    "vector-rag": {
+      "2": {
+        "supporting_recall": 0.48,
+        "all_found": 0.1467,
+        "answer_recall": 0.25
+      },
+      "5": {
+        "supporting_recall": 0.665,
+        "all_found": 0.3867,
+        "answer_recall": 0.4833
+      },
+      "10": {
+        "supporting_recall": 0.8167,
+        "all_found": 0.64,
+        "answer_recall": 0.7033
+      }
+    },
+    "rmm-proximity": {
+      "2": {
+        "supporting_recall": 0.465,
+        "all_found": 0.15,
+        "answer_recall": 0.2667
+      },
+      "5": {
+        "supporting_recall": 0.6283,
+        "all_found": 0.36,
+        "answer_recall": 0.4733
+      },
+      "10": {
+        "supporting_recall": 0.8,
+        "all_found": 0.6167,
+        "answer_recall": 0.69
+      }
+    },
+    "rmm-extracted": {
+      "2": {
+        "supporting_recall": 0.2933,
+        "all_found": 0.0767,
+        "answer_recall": 0.2733
+      },
+      "5": {
+        "supporting_recall": 0.4517,
+        "all_found": 0.1867,
+        "answer_recall": 0.4367
+      },
+      "10": {
+        "supporting_recall": 0.6633,
+        "all_found": 0.42,
+        "answer_recall": 0.66
+      }
+    },
+    "ppr-extracted": {
+      "2": {
+        "supporting_recall": 0.405,
+        "all_found": 0.2067,
+        "answer_recall": 0.39
+      },
+      "5": {
+        "supporting_recall": 0.6017,
+        "all_found": 0.3967,
+        "answer_recall": 0.57
+      },
+      "10": {
+        "supporting_recall": 0.7883,
+        "all_found": 0.6633,
+        "answer_recall": 0.7833
+      }
+    },
+    "rmm-oracle-graph": {
+      "2": {
+        "supporting_recall": 0.525,
+        "all_found": 0.16,
+        "answer_recall": 0.4733
+      },
+      "5": {
+        "supporting_recall": 0.6933,
+        "all_found": 0.4267,
+        "answer_recall": 0.6967
+      },
+      "10": {
+        "supporting_recall": 0.8333,
+        "all_found": 0.6733,
+        "answer_recall": 0.8167
+      }
+    }
+  }
+}
