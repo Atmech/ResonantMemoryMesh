@@ -1,5 +1,5 @@
 """
-RMM PostgresStorage - Production adapter with psycopg3.
+RMM PostgresStorage - PostgreSQL adapter with psycopg3.
 
 Key features:
 - Async-capable via psycopg3's C-backend

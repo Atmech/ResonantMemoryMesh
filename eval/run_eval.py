@@ -82,8 +82,6 @@ def load_2wiki(n: int):
     """
     from datasets import load_dataset
     print("[dataset] Trying 2wikimultihop...", flush=True)
-    ds = load_dataset("bigbio/med_qa", split="validation", trust_remote_code=True)  # wrong, just placeholder
-    # The correct dataset name:
     ds = load_dataset("voidful/2wikimultihopqa", split="validation", trust_remote_code=True)
     examples = []
     for ex in ds:
@@ -456,12 +454,13 @@ def aggregate(per_q: List[dict]) -> dict:
 # Main eval loop
 # ─────────────────────────────────────────────────────────────────────────────
 
-def run_eval(n: int, ks: List[int], auto_link_threshold: float = 0.6):
+def run_eval(n: int, ks: List[int], auto_link_threshold: float = 0.6, dataset: str = "auto"):
     results = {}
     t0 = time.time()
 
     # Load dataset
-    dataset_name, examples = load_dataset_auto(n)
+    loaders = {"auto": load_dataset_auto, "musique": load_musique, "2wiki": load_2wiki, "hotpot": load_hotpot}
+    dataset_name, examples = loaders[dataset](n)
     actual_n = len(examples)
     print(f"[eval] Dataset: {dataset_name}, N={actual_n}", flush=True)
 
@@ -704,7 +703,7 @@ def main():
     parser = argparse.ArgumentParser(description="RMM multi-hop retrieval eval")
     parser.add_argument("--n", type=int, default=300, help="Number of questions to evaluate (default: 300)")
     parser.add_argument("--k", type=int, nargs="+", default=[2, 5, 10], help="Top-k values to evaluate (default: 2 5 10)")
-    parser.add_argument("--dataset", type=str, default="auto",
+    parser.add_argument("--dataset", choices=["auto", "musique", "2wiki", "hotpot"], default="auto",
                         help="Dataset to use: auto (default), musique, 2wiki, hotpot")
     parser.add_argument("--threshold", type=float, default=0.6,
                         help="AutoLinker cosine threshold for RMM-proximity (default: 0.6)")
@@ -716,7 +715,7 @@ def main():
     print(f"[config] Output: {args.out}")
     print()
 
-    data = run_eval(n=args.n, ks=args.k, auto_link_threshold=args.threshold)
+    data = run_eval(n=args.n, ks=args.k, auto_link_threshold=args.threshold, dataset=args.dataset)
 
     # Save raw results
     out_path = Path(args.out)

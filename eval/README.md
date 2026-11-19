@@ -1,68 +1,30 @@
-# RMM Multi-hop Retrieval Eval
+# Reproducing the retrieval experiments
 
-A deterministic, LLM-free harness that tests whether Resonant Memory Mesh's
-graph-propagation physics retrieve multi-hop supporting evidence better than
-vanilla vector-RAG.
+The paper uses one query per fresh mesh, five starting passages, and five output slots. The discovery run uses the first 300 eligible MuSiQue validation questions. The follow-up draws 100 questions per hop count (two, three and four) from later rows. Each question supplies its own candidate paragraphs. [Published paper](https://doi.org/10.5281/zenodo.24355596)
 
-## What it measures
+## Verify the reported tables
 
-The engine's core claim is that it retrieves multi-hop evidence that vector
-similarity alone misses. We test that claim directly on supporting-paragraph
-recall — no answer generation, no LLM judge.
+Run all commands on this page from the repository root.
 
-For each question we build a **fresh per-question corpus** from the question's
-candidate paragraphs (exactly the distractor setting used in the dataset).
-Three retrieval systems compete:
-
-| System | Graph | Description |
-|--------|-------|-------------|
-| **vector-RAG** | none | Pure cosine similarity top-k. Baseline. |
-| **RMM-proximity** | AutoLinker | RMM as shipped: edges built by cosine-threshold proximity on the candidate paragraphs. |
-| **RMM-oracle-graph** | Gold chain | RMM with edges hand-wired along the gold supporting-fact chain + query-entry connection. Upper bound on "what the physics can do given a perfect graph." |
-
-## Metrics (no LLM)
-
-- **SupportingRecall@k** — fraction of gold supporting paragraphs that appear in the top-k retrieved set, averaged over questions. This is THE number.
-- **AllFound@k** — fraction of questions where ALL gold supporting paragraphs appear in top-k (strict multi-hop success).
-- **AnsRecall@k** — fraction of questions where the gold answer string appears verbatim (case-insensitive substring) in any top-k paragraph.
-
-## Dataset
-
-Downloaded at runtime (Hugging Face `datasets` library). Preference order:
-
-1. MuSiQue-Answerable (`dgslibisey/MuSiQue` dev/validation)
-2. HotpotQA distractor (`hotpot_qa`, validation)
-3. 2WikiMultihopQA (`voidful/2wikimultihopqa`, validation)
-
-First 300 questions are used (configurable via `--n`).
-
-## How to run
-
-```bash
-# Default: N=300, k=2,5,10
-.venv/bin/python eval/run_eval.py
-
-# Custom
-.venv/bin/python eval/run_eval.py --n 100 --k 2 5 10 --threshold 0.6
-
-# Specific dataset
-.venv/bin/python eval/run_eval.py --dataset hotpot --n 300
+```sh
+python3 eval/check_tables.py
 ```
 
-Output:
-- Prints a markdown table to stdout
-- Saves raw per-metric summary to `eval/results.json`
+The table script uses the standard library. It recomputes supporting-paragraph recall and complete support from the saved paragraph IDs, reports the recorded answer-string hits, and checks the two samples are disjoint. The outputs include the paragraph IDs in each ranking, gold IDs, exact-score tie flags, dependency versions and query-level metrics. [Discovery run](paper_top5.json) · [Balanced follow-up](paper_balanced.json) · [Supplementary-passage totals](review_queue_results.json)
 
-## Honesty caveats
+## Recompute retrieval
 
-1. **Per-question corpus**: each question provides its own distractor paragraphs (typically 10–20). All systems index the same set. This advantages all systems equally vs. a real open-corpus retrieval scenario, but is the standard evaluation protocol for these datasets.
+Start with the [source installation](../README.md#try-the-mesh) and its active Python 3.13 environment. The recorded runs used the following packages and spaCy English model version 3.8.0.
 
-2. **RMM-proximity graph quality**: AutoLinker connects paragraphs whose cosine similarity exceeds a threshold (default 0.6). In a distractor setting with diverse paragraphs, few proximity edges may form. This is reported honestly — if RMM-proximity matches or loses to vector-RAG, that is the real result.
+```sh
+python -m pip install numpy==2.4.2 networkx==3.6.1 torch==2.10.0 datasets==5.0.0 sentence-transformers==5.2.3 spacy==3.8.14 scipy==1.17.1 transformers==5.3.0
+python -m spacy download en_core_web_sm
+mkdir -p build/eval
+python eval/paper_eval.py --sample prefix --out build/eval/prefix.json
+python eval/paper_eval.py --sample balanced --out build/eval/balanced.json
+python eval/review_queue.py --results build/eval/balanced.json
+```
 
-3. **RMM-oracle-graph** is an upper bound only. It uses gold labels that are not available at inference time. It answers: "given a perfect graph, does the energy-propagation physics help?" It does NOT represent a deployable system.
+Both scripts pin the dataset and encoder revisions and accept `--arrow PATH` for a local MuSiQue validation file. Results can vary across installations when floating-point reductions affect ties. The last command compares the union of two top-five lists with a cosine list of the same length on each question.
 
-4. **No ignition events**: logged when `mesh.query()` returns zero nodes. These contribute 0 to all metrics (penalizing RMM fairly).
-
-5. **Embedding model**: `all-MiniLM-L6-v2` (local, 384-dim). No external API calls.
-
-6. **Threshold was NOT tuned to favor RMM**. The default 0.6 is the RMM default in `MeshConfig`. To experiment with other values, use `--threshold`.
+The paper runner imports helpers from [run_eval.py](run_eval.py). Its older multi-cutoff experiment produced [results.json](results.json) by querying the same mesh at successive cutoffs. Use [paper_eval.py](paper_eval.py) for the manuscript protocol. The [archived supplement](../rmm_evaluation_supplement.zip) preserves the study materials as packaged with the paper.

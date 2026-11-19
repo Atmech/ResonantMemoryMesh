@@ -17,8 +17,8 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/affantanke/ResonantMemoryMesh"
-Paper = "https://arxiv.org/"
+Repository = "https://github.com/Atmech/ResonantMemoryMesh"
+Paper = "https://doi.org/10.5281/zenodo.24355596"
 
 [project.optional-dependencies]
 dev = [

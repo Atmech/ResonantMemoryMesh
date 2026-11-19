@@ -44,7 +44,7 @@ def demo_autolinker():
             target_name = storage.get_node(e.target).metadata.get('name')
             print(f" -> Automatically linked to: {target_name} (Weight: {e.weight:.4f})")
             
-        assert len(edges_a) == 1, "Should have exactly 1 edge to Node B"
+        assert [edge.target for edge in edges_a] == [id_b], "Expected a single edge to Node B"
         print("SUCCESS: AutoLinker connected Node A and Node B, but ignored Node C.")
 
 
@@ -76,19 +76,16 @@ def demo_hub_dampening():
         res = mesh.query(v_hub, top_n=5)
         
         print("\nTop 5 Activated Nodes:")
-        for idx, n in enumerate(res.nodes):
+        for idx, n in enumerate(res.nodes[:5]):
             print(f"{idx+1}. {n.metadata.get('label', 'Unknown')} (Energy: {n.energy:.4f})")
             
         hub_node = next((n for n in res.nodes if n.id == id_hub), None)
         leaf_nodes = [n for n in res.nodes if "Leaf" in n.metadata.get('label', '')]
         
-        print("\nObservation:")
-        print("The Hub receives max energy (because it's the direct query target).")
-        print(f"However, because its degree (20) > threshold (5), the energy transferred ")
-        print(f"to its neighbors is drastically dampened by the alpha penalty.")
+        if hub_node:
+            print(f"Hub activation: {hub_node.energy:.4f}")
         if leaf_nodes:
-            print(f"Top leaf energy is only: {leaf_nodes[0].energy:.4f}")
-        print("SUCCESS: Hub Dampening prevents the 20 leaves from flooding the memory retrieval.")
+            print(f"Highest leaf activation: {leaf_nodes[0].energy:.4f}")
 
 
 def demo_adaptive_tuning():

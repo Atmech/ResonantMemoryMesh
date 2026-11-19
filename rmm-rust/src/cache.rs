@@ -1,11 +1,6 @@
 //! RMM L1 Cache - Thread-safe in-memory graph storage
 //!
-//! Uses DashMap for lock-free concurrent reads on the GLOBAL cache,
-//! enabling true parallelism across all CPU cores.
-//!
-//! Key design:
-//! - Global L1 Cache: DashMap (high-concurrency, many readers)
-//! - Query-local overlay: Consider FxHashMap (single-query, Rayon-only)
+//! Shared node and adjacency maps use DashMap shard locks.
 
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
@@ -18,11 +13,6 @@ use rand::seq::IteratorRandom;
 use crate::models::{RustNode, RustEdge, InternalNode, InternalEdge};
 
 /// Thread-safe L1 Cache for the active mesh
-/// 
-/// This is the core data structure that enables GIL-free parallelism.
-/// DashMap provides:
-/// - Lock-free reads (multiple threads can read simultaneously)
-/// - Fine-grained write locks (only the affected shard is locked)
 /// 
 /// Python SyncThread Integration:
 /// - Call `update_batch()` after WriteBackBuffer flushes to Postgres
@@ -68,7 +58,7 @@ impl L1Cache {
         self.update_count.fetch_add(1, Ordering::Relaxed);
     }
     
-    /// Batch update nodes using raw UUID bytes (zero-copy path)
+    /// Batch update nodes using raw UUID bytes
     pub fn update_batch_raw(
         &self,
         py: Python<'_>,
@@ -272,7 +262,7 @@ impl L1Cache {
         self.nodes.get(&uuid).map(|n| RustNode::from(n.value()))
     }
     
-    /// Get a node by raw UUID bytes (zero-copy)
+    /// Get a node by raw UUID bytes
     pub fn get_node_raw(&self, py: Python<'_>, uuid_bytes: &PyBytes) -> Option<RustNode> {
         let bytes = uuid_bytes.as_bytes();
         if bytes.len() != 16 {

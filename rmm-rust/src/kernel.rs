@@ -5,7 +5,7 @@
 //!
 //! Performance optimizations:
 //! - f32 for all physics (SIMD-friendly)
-//! - Raw bytes UUID support (zero-copy from Python)
+//! - Raw bytes UUID support
 //! - DashMap for global cache, FxHashMap for query-local overlay
 //! - Rayon parallel iteration for neighbor processing
 
@@ -111,7 +111,7 @@ impl RustKernel {
         self.execute_internal(&entry_uuids, cache, t_now)
     }
     
-    /// Execute AtomicPing with raw UUID bytes (zero-copy path)
+    /// Execute AtomicPing with raw UUID bytes
     /// 
     /// Python usage:
     ///   result = kernel.execute_raw([node.id.bytes for node in entries], cache)

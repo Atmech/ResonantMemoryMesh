@@ -1,7 +1,7 @@
 """
 RMM Latency Benchmark
 =====================
-Measures warm single-threaded query latency and approximate sequential QPS
+Measures warm sequential query latency and approximate sequential QPS
 for an in-memory Mesh with 1000 nodes, 128-dim vectors, no edges (pure
 proximity/vector search path through Hybrid Ignition).
 
@@ -36,7 +36,7 @@ def main():
     print(f"  Dim   : {DIM}")
     print(f"  top_n : {TOP_N}")
     print(f"  Warmup: {NUM_WARMUP} queries")
-    print(f"  Timed : {NUM_MEASURE} queries (single-threaded, sequential)")
+    print(f"  Timed : {NUM_MEASURE} queries (one caller, sequential)")
     print()
 
     storage = InMemoryStorage()
@@ -87,7 +87,7 @@ def main():
 
     print()
     print("=" * 50)
-    print("Results (warm, in-memory, 1000 nodes, single core — measured)")
+    print("Results (warm, in-memory, 1000 nodes, one sequential caller)")
     print("=" * 50)
     print(f"  Median latency : {median_ms:.2f} ms")
     print(f"  Mean latency   : {mean_ms:.2f} ms")
@@ -96,7 +96,7 @@ def main():
     print(f"  Sequential QPS : {seq_qps:.0f}")
     print("=" * 50)
     print()
-    print("Note: QPS above is sequential (single-threaded). Concurrent")
+    print("Note: QPS above is for one caller. Concurrent")
     print("throughput under GIL has NOT been benchmarked here.")
 
     mesh.close()

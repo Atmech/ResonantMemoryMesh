@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "Please cite the accompanying paper when using this research code."
+title: Resonant Memory Mesh
+authors:
+  - family-names: Tanke
+    given-names: Affan
+license: Apache-2.0
+preferred-citation:
+  type: generic
+  title: Resonance Is All You Need
+  authors:
+    - family-names: Tanke
+      given-names: Affan
+  year: 2026
+  doi: 10.5281/zenodo.24355596
+  publisher:
+    name: Zenodo

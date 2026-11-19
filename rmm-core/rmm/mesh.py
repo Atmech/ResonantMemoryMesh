@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 class Mesh:
     """
     Primary SDK interface for Resonant Memory Mesh.
-    Delivers High-Performance via Rust Kernel + Zero-Copy Bridge.
+    Coordinates storage and the Rust query kernel.
     """
     
     def __init__(self, storage: BaseStorage, config: MeshConfig = None):
@@ -73,7 +73,7 @@ class Mesh:
         """SyncThread Entry Point for Nodes."""
         # 1. Write to L2
         self.storage.upsert_nodes(nodes)
-        # 2. Update Rust L1 (Zero-Copy)
+        # 2. Update Rust L1
         self._update_rust_l1(nodes)
 
     def _flush_edges_to_storage(self, edges: List[Edge]) -> None:
@@ -84,7 +84,7 @@ class Mesh:
         self._update_rust_l1_edges(edges)
 
     def _update_rust_l1(self, nodes: List[Node]) -> None:
-        """Helper to push nodes to Rust L1 using Zero-Copy raw bytes."""
+        """Helper to push nodes to Rust L1 using UUID bytes."""
         raw_data = []
         for n in nodes:
             # Extract label from metadata or use ID
@@ -328,7 +328,7 @@ class Mesh:
 
     def ingest(self, vector: np.ndarray, metadata: dict = None, significance: float = 1.0) -> uuid.UUID:
         """
-        Add a new node (Zero-Copy Bridge: L2 Buffer + Immediate Rust L1).
+        Buffer a node for storage and add it to the Rust cache.
         """
         if not self._started:
             self.start()

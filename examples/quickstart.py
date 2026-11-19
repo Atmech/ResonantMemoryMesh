@@ -1,27 +1,24 @@
-"""RMM Quickstart — Bob/Alice causal chain in <20 lines."""
+"""Trace a query across two explicit links using fixed unit vectors."""
 import numpy as np
 from rmm import Mesh, MeshConfig
 from rmm.adapters.memory import InMemoryStorage
 
-def embed(text: str, dim: int = 128) -> np.ndarray:
-    """Deterministic pseudo-embedding for demo purposes."""
-    rng = np.random.RandomState(abs(hash(text)) % (2**31))
-    v = rng.randn(dim).astype(np.float32)
-    return v / np.linalg.norm(v)
 
-mesh = Mesh(InMemoryStorage(), MeshConfig(beta=0.7, lambda_decay=0.1))
+def main():
+    vectors = np.eye(3, dtype=np.float32)
+    labels = ["Manufacturer", "Chip supplier", "Acquirer"]
+    with Mesh(InMemoryStorage(), MeshConfig(auto_link=False)) as mesh:
+        ids = [mesh.ingest(vector, metadata={"label": label})
+               for vector, label in zip(vectors, labels)]
+        mesh.connect(ids[0], ids[1], weight=0.9)
+        mesh.connect(ids[1], ids[2], weight=0.9)
+        mesh.flush()
 
-facts = [
-    "Bob was recently hired as Managing Director at Mars Capital.",
-    "Mars Capital led the Series A for Alice's startup, TechCorp.",
-    "TechCorp's product relies on hardware from Quantum Silicon.",
-    "Quantum Silicon was acquired by Apex Holdings.",
-    "Apex Holdings has an exclusive contract with Omega Inc.",
-]
-ids = [mesh.ingest(embed(f), metadata={"fact": f}) for f in facts]
-for i in range(len(ids) - 1):
-    mesh.connect(ids[i], ids[i + 1], weight=0.9)
+        result = mesh.query(vectors[0], top_n=1)
+        print("Activated records from one starting point")
+        for node in result.nodes:
+            print(f"{node.metadata['label']}: {node.energy:.3f}")
 
-result = mesh.query(embed("Does Bob have any connection to Omega Inc?"), top_n=10)
-for rank, node in enumerate(result.nodes, 1):
-    print(f"  Rank {rank}: {node.metadata['fact'][:60]}... (energy: {node.energy:.4f})")
+
+if __name__ == "__main__":
+    main()

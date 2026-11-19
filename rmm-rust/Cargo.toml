@@ -36,6 +36,8 @@ log = "0.4"
 pyo3-log = "0.9"
 
 [profile.release]
+# Preserve Mach-O load-command alignment on macOS 27 (rust-lang/rust#157750).
+strip = "none"
 lto = true
 codegen-units = 1
 opt-level = 3

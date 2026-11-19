@@ -1,16 +1,4 @@
-"""
-RMM Load Test - GIL Stress Test & Postgres Benchmark
-
-Target: 200 qps with p99 < 30ms (In-Memory), p99 < 50ms (Postgres)
-If p99 > threshold → Move AtomicPing to Rust FFI
-
-Usage:
-    # In-memory baseline
-    pytest tests/test_loadtest.py::test_inmemory_baseline -v
-    
-    # Postgres benchmark (requires docker-compose up)
-    pytest tests/test_loadtest.py::test_postgres_benchmark -v -s
-"""
+"""Concurrent query benchmarks for the in-memory and PostgreSQL adapters."""
 import time
 import statistics
 import concurrent.futures
@@ -135,25 +123,10 @@ class TestInMemoryBaseline:
 
     @pytest.mark.xfail(
         strict=True,
-        reason=(
-            "The pure-Python AtomicPing kernel under 50-thread concurrency "
-            "currently produces p99 ~6000ms, far above the 30ms target. "
-            "The GIL serialises all Python bytecode, so 50 concurrent "
-            "threads effectively queue behind each other — the observed "
-            "p99 scales with (num_queries / concurrency) * single_query_latency "
-            "rather than being bounded by core count. "
-            "Meeting the 30ms p99 target requires moving the hot kernel "
-            "loop to Rust (rmm-rust) with PyO3 / GIL-release, which is "
-            "not yet integrated. Mark xfail until that is done."
-        ),
+        reason="The in-memory benchmark currently exceeds the 30 ms p99 target under 50 concurrent callers.",
     )
     def test_inmemory_baseline(self):
-        """
-        Target: Establish pure Python + GIL overhead baseline.
-        This isolates kernel compute from storage IO.
-
-        NOTE: Currently xfail — see decorator reason above.
-        """
+        """Measure concurrent callers through the Python SDK and Rust kernel."""
         storage = InMemoryStorage()
         mesh, _ = setup_test_mesh(storage, num_nodes=1000, num_edges=5000)
 
@@ -203,7 +176,6 @@ class TestPostgresBenchmark:
     def test_postgres_benchmark(self, postgres_storage):
         """
         Target: p99 < 50ms with Postgres.
-        If p99 > 50ms → Consider Rust FFI for AtomicPing.
         """
         mesh, _ = setup_test_mesh(postgres_storage, num_nodes=1000, num_edges=5000)
         

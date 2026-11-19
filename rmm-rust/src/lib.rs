@@ -1,13 +1,4 @@
-//! RMM-Rust: High-Performance Resonant Memory Mesh Kernel
-//!
-//! This crate provides a Rust implementation of the AtomicPing algorithm
-//! with Python bindings via PyO3. Designed for high-concurrency scenarios
-//! where Python's GIL becomes a bottleneck.
-//!
-//! # Architecture
-//! - L1 Cache: DashMap for lock-free concurrent reads
-//! - Parallelism: Rayon for intra-query neighbor processing
-//! - FFI: PyO3 for zero-overhead Python integration
+//! Python bindings for graph traversal, activation updates, and the shared cache.
 
 mod models;
 mod physics;

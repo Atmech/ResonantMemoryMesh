@@ -61,7 +61,7 @@ impl RustNode {
         }
     }
     
-    /// Create from raw UUID bytes (zero-copy path)
+    /// Create from raw UUID bytes
     #[staticmethod]
     pub fn from_bytes(
         py: Python<'_>,
@@ -103,7 +103,7 @@ impl RustNode {
         self.vector.clone()
     }
     
-    /// Get UUID as raw bytes for zero-copy passing
+    /// Get UUID as raw bytes
     pub fn id_bytes(&self, py: Python<'_>) -> PyResult<PyObject> {
         let uuid = Uuid::parse_str(&self.id)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;

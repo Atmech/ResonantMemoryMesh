@@ -27,3 +27,9 @@ pypdf-*.dist-info/
 assets/
 docs/
 knowmem-site/
+
+# Local handover materials and superseded drafts
+/private-notes/
+/.env
+/.env.*
+!/.env.example

@@ -1,20 +1,4 @@
-"""
-Resonant Memory Mesh - Real World Scenario Demo
-Use Case: An AI Detective Assistant ("Project KAI")
-
-Scenario:
-We are building an AI assistant for a detective agency. 
-We ingest disparate facts about cases, people, and locations.
-Some facts are standalone. Some form hubs (like "Chicago").
-When the detective asks a question, RMM should follow causal chains of evidence
-through the mesh to synthesize an answer, avoiding the noise of the hubs.
-
-This demonstrates:
-1. AutoLinker: Connecting related evidence pieces automatically without LLM pre-processing.
-2. Hub Dampening: Passing through the "Chicago" hub without retrieving every crime in Chicago.
-3. Adaptive Tuning: The mesh balancing its energy as the evidence board grows.
-4. Structural Rationale: Generating a trace of logic for the detective.
-"""
+"""Illustrate retrieval on six fictional reports using TF-IDF and proximity links."""
 
 import time
 import uuid
@@ -27,7 +11,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'rmm-
 
 from rmm import Mesh, MeshConfig
 from rmm.adapters.memory import InMemoryStorage
-from sentence_transformers import SentenceTransformer
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -81,7 +64,6 @@ def main():
         print("--- PHASE 1: INGESTING EVIDENCE ---")
         time.sleep(1)
         
-        import json
         
         # 1. The Core Crime
         evidence_1 = "A rare blue diamond was stolen from the Chicago Central Museum on Tuesday night."
@@ -114,7 +96,7 @@ def main():
         mesh.ingest(embed(evidence_6), metadata={"label": evidence_6})
         
         mesh.flush()
-        print("\nAll evidence ingested! AutoLinker has silently built semantic edges based on vector proximity in the background.")
+        print("\nAll evidence ingested! The graph uses proximity links.")
         
         print("\n--- PHASE 2: THE QUERY ---")
         time.sleep(2)
@@ -131,44 +113,22 @@ def main():
         duration = time.time() - start_time
         
         print(f"\nQuery completed in {duration:.4f} seconds.")
-        print(f"Active Adaptive Tuning parameters: β={config.beta:.4f}, λ={config.lambda_decay:.4f}")
+        print(f"Base parameters: β={config.beta:.4f}, λ={config.lambda_decay:.4f}")
         
         print("\n--- PHASE 3: THE RESULTS ---")
         time.sleep(1)
         
         print("Top 3 retrieved evidence nodes based on Resonance:")
-        for i, node in enumerate(result.nodes):
-            meta = node.metadata
-            text = "Unknown Evidence"
-            if isinstance(meta, dict):
-                text = meta.get('label', str(meta))
-            elif isinstance(meta, str):
-                try:
-                    meta_dict = json.loads(meta)
-                    if isinstance(meta_dict, dict):
-                        text = meta_dict.get('label', meta)
-                    else:
-                        text = meta
-                except:
-                    text = meta
-            elif isinstance(meta, bytes):
-                text = meta.decode('utf-8', errors='ignore')
-            else:
-                text = str(meta)
-            print(f"  {i+1}. [Energy: {node.energy:.4f}] {text}")
-            
-        print("\n--- PHASE 4: STRUCTURAL RATIONALE ---")
-        time.sleep(1)
-        print("How did RMM link the question to Victor Vance without a direct text match?")
-        print("\n" + result.rationale)
-        
-        
-        print("\n--- WHY THIS IS POWERFUL ---")
-        print("1. Standard RAG (Vector Search) would only return Evidence 1 (the theft) and maybe Evidence 4 (another theft).")
-        print("   It would miss Victor Vance entirely because 'Victor Vance' has low text similarity to 'Tuesday night museum theft'.")
-        print("2. RMM's AutoLinker connected the Theft -> The Van -> Victor Vance automatically.")
-        print("3. Energy flowed down that chain ('Resonated') to pull Victor Vance to the top of the results.")
-        print("4. The Hub Dampening prevented the system from getting distracted by the word 'Chicago' (which existed in 4 different nodes) and retrieving the irrelevant bank robbery or pizza trivia.")
+        for i, node in enumerate(result.nodes[:3], start=1):
+            print(f"  {i}. [Energy: {node.energy:.4f}] {node.metadata['label']}")
+
+        print("\nDirect cosine matches")
+        for i, node_id in enumerate(storage.vector_search(query_vector, top_k=3), start=1):
+            print(f"  {i}. {storage.get_node(node_id).metadata['label']}")
+
+        print("\nGraph rationale")
+        print(result.rationale)
+
 
 if __name__ == "__main__":
     main()

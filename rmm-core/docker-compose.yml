@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: rmm_dev_password
       POSTGRES_DB: rmm
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - rmm_pgdata:/var/lib/postgresql/data
       - ./sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
